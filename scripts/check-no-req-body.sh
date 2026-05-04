@@ -16,10 +16,20 @@ if [ ${#SEARCH_DIRS[@]} -eq 0 ]; then
   exit 0
 fi
 
-MATCHES=$(grep -rE "req\.body|request\.body" \
+# Match `req.body` / `request.body` in production code, but exclude:
+# - `rawBody` (the canonical raw-buffer field)
+# - JSDoc / line comments (lines whose first non-whitespace is `*` or `//`)
+# - `Object.keys(req.body)` and `Object.keys(request.body)` — the request-logger
+#   plugin reads top-level KEYS only (D-29), never values; safe by construction
+MATCHES=$(grep -rnE "req\.body|request\.body" \
   "${SEARCH_DIRS[@]}" \
   --include='*.ts' --include='*.tsx' \
-  2>/dev/null | grep -v 'rawBody' || true)
+  2>/dev/null \
+  | grep -v 'rawBody' \
+  | grep -vE ':[[:space:]]*\*' \
+  | grep -vE ':[[:space:]]*//' \
+  | grep -vE 'Object\.keys\((req|request)\.body\)' \
+  || true)
 
 if [ -n "$MATCHES" ]; then
   echo "FAIL: req.body / request.body found in production code:"
