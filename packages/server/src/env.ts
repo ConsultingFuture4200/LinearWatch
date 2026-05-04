@@ -23,8 +23,13 @@ const EnvSchema = z.object({
   LINEAR_WEBHOOK_SECRET: z.string().min(1),
   AGENTWATCH_INTERNAL_API_KEY: z.string().min(16),
 
-  // Set by setup wizard, not at first boot
-  WORKSPACE_ID: z.string().uuid().optional(),
+  // Set by setup wizard, not at first boot. Empty string from compose env-interpolation
+  // (`${WORKSPACE_ID:-}`) is treated as unset.
+  WORKSPACE_ID: z
+    .string()
+    .transform((v) => (v === '' ? undefined : v))
+    .pipe(z.string().uuid().optional())
+    .optional(),
 
   // Optional with sensible defaults
   IDENTITY_CONFIDENCE_THRESHOLD: z.coerce.number().min(0).max(1).default(0.8),
