@@ -1,143 +1,205 @@
-# agentwatch
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="LOGO_DARK_URL">
+    <source media="(prefers-color-scheme: light)" srcset="LOGO_LIGHT_URL">
+    <img alt="agentwatch" src="LOGO_LIGHT_URL" width="400">
+  </picture>
+</p>
+<!-- TODO: Replace LOGO_DARK_URL and LOGO_LIGHT_URL, or remove the <picture> block and use a text header -->
 
-Self-hosted, open-source observability for AI agents working in Linear workspaces.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
+  <a href="RELEASES_URL"><img src="https://img.shields.io/github/v/release/YOUR_USERNAME/agentwatch?style=flat-square" alt="Release"></a>
+  <a href="CI_URL"><img src="https://img.shields.io/github/actions/workflow/status/YOUR_USERNAME/agentwatch/ci.yml?style=flat-square" alt="CI"></a>
+  <a href="DISCORD_URL"><img src="https://img.shields.io/discord/DISCORD_SERVER_ID?style=flat-square&logo=discord&logoColor=white&label=discord" alt="Discord"></a>
+</p>
 
-agentwatch ingests Linear Agent Session webhooks, GitHub PR outcomes, and agent vendor cost
-data; resolves them into a unified agent identity; and exposes cost, reliability, and lineage
-analytics through a dashboard, CLI, and YAML-defined alert rules.
+<p align="center"><strong>Cost, reliability, and lineage for the agents working in your Linear workspace.</strong></p>
 
-**Core value:** cross-agent attribution — for any issue, team, or cycle, see which agent did
-what, what it cost, and whether the change held up.
+---
+
+<p align="center">
+  <img src="DASHBOARD_SCREENSHOT_URL" alt="agentwatch dashboard" width="700">
+</p>
+<!-- TODO: Replace DASHBOARD_SCREENSHOT_URL with a real screenshot or GIF of the dashboard -->
+
+## Why agentwatch
+
+Cursor, Devin, Codex, Sentry's Seer, and your own internal agents are all working tickets in Linear. Each vendor shows you their own session log. Linear shows you the comment thread. Nobody shows you the cross-agent view: what every agent did this week, what it cost, what worked, and what got reverted three days later.
+
+agentwatch is the observability layer for that mess. Self-hosted, Postgres-only, one Docker compose command to run.
+
+## Features
+
+- **Cost attribution per agent** — spend per agent per team per cycle, with cost-per-closed-issue as a derived metric.
+- **Reliability telemetry** — success rate, revert-within-7-days, time-to-resolution, broken out per agent.
+- **Cross-agent lineage** — for any issue, the timeline of which agents touched it and what each one did.
+- **YAML-defined alerts** — cost anomalies and reliability regressions, with a community rule-pack format.
+- **CLI and dashboard** — same query API behind both. Pipe results into your tools or browse them in a UI.
+- **Vendor-neutral** — Cursor, Devin, Codex, Seer, and homegrown agents via the SDK, all in one schema.
+
+## How it works
+
+```mermaid
+---
+title: agentwatch architecture
+---
+flowchart LR
+    L[Linear] --> R[Webhook receiver]
+    G[GitHub] --> R
+    V[Vendor APIs] --> R
+    S[Internal SDK] --> R
+    R --> I[Identity resolver]
+    I --> E[Enrichment worker]
+    E --> P[(Postgres)]
+    P --> D[Dashboard]
+    P --> C[CLI]
+    P --> A[Alerts]
+```
+
+Linear webhooks (Agent Session events) are the spine. GitHub provides the outcome signal — was the PR merged, reverted, did CI pass. Vendor APIs supply cost data where exposed. Everything stitches into one `agent_session_id` and lands in Postgres.
 
 ## Quick start
 
+> [!IMPORTANT]
+> Requires Docker 24+ and a Linear workspace on the Business or Enterprise plan (for Agent Session webhook access).
+
 ```bash
-git clone https://github.com/your-org/agentwatch.git
+git clone https://github.com/YOUR_USERNAME/agentwatch.git
 cd agentwatch
 cp .env.example .env
-# Edit .env: set LINEAR_CLIENT_ID, LINEAR_CLIENT_SECRET, LINEAR_WEBHOOK_SECRET,
-# and AGENTWATCH_INTERNAL_API_KEY (any random 32+ char string).
-
-docker compose up
-# Open http://localhost:3000
+# edit .env with your Linear OAuth credentials and GitHub PAT
+docker compose up -d
 ```
 
-The full stack (Postgres + server + worker + Next.js dashboard) reaches the dashboard
-placeholder within 5 minutes on a clean laptop.
+Open `http://localhost:3000` and complete the workspace setup wizard. First data appears within minutes of your next agent activity.
 
-## Local development (contributors)
+## Installation
 
-The hybrid inner loop avoids rebuilding containers on every code change:
+> [!NOTE]
+> Self-hosted only. There is no managed cloud version yet — see [Roadmap](#roadmap).
+
+<table>
+  <tr><th>Method</th><th>Best for</th><th>Command</th></tr>
+  <tr><td>Docker Compose</td><td>Most users</td><td><code>docker compose up -d</code></td></tr>
+  <tr><td>Helm chart</td><td>Kubernetes</td><td><code>helm install agentwatch agentwatch/agentwatch</code></td></tr>
+  <tr><td>From source</td><td>Contributors</td><td><code>pnpm install && pnpm dev</code></td></tr>
+</table>
+
+## Configuration
+
+> [!IMPORTANT]
+> `LINEAR_CLIENT_ID`, `LINEAR_CLIENT_SECRET`, and `DATABASE_URL` are required. Everything else is optional.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `LINEAR_CLIENT_ID` | Yes | — | OAuth app ID with `actor=app` scope |
+| `LINEAR_CLIENT_SECRET` | Yes | — | OAuth app secret |
+| `DATABASE_URL` | Yes | — | Postgres connection string |
+| `GITHUB_PAT` | No | — | Personal access token; enables PR outcome tracking |
+| `CURSOR_API_KEY` | No | — | Enables Cursor cost enrichment |
+| `DEVIN_API_KEY` | No | — | Enables Devin cost enrichment |
+| `TELEMETRY_OPT_IN` | No | `false` | Send anonymized aggregates to the public benchmark |
+| `LOG_LEVEL` | No | `info` | `debug`, `info`, `warn`, `error` |
+
+<details>
+<summary>Full configuration reference</summary>
+
+See [docs/configuration.md](docs/configuration.md) for the complete list, including SMTP for email alerts, Slack webhook URLs, custom retention windows, and database tuning flags.
+
+</details>
+
+## Usage
+
+### CLI
 
 ```bash
-docker compose up postgres            # database only
-pnpm install
-pnpm --filter @agentwatch/server dev  # webhook receiver + query API on host
-pnpm --filter @agentwatch/server worker  # Graphile Worker on host
-pnpm --filter @agentwatch/web dev     # Next.js dashboard on host
+# Cost per agent over the last cycle
+agentwatch query "spend by agent last 14d"
+
+# Reliability snapshot
+agentwatch report reliability --team ENG
+
+# Lineage for a specific issue
+agentwatch lineage LIN-1234
+
+# Tail live agent activity
+agentwatch tail
 ```
 
-Run `pnpm lint`, `pnpm typecheck`, and `pnpm test` before pushing — CI runs all three plus
-the OBS-04 grep guard.
+### Dashboard
 
-## Deployment notes
+Three views, all reading the same query API as the CLI:
 
-### Reverse-proxy auth (DEPLOY-05)
+- **Cost** — spend per agent per team, cost-per-closed-issue, anomaly highlights
+- **Reliability** — success rate, revert rate, time-to-resolution distributions
+- **Lineage** — per-issue timeline of every agent that touched it
 
-agentwatch v0 does not ship built-in authentication. Put the dashboard and server behind a
-reverse-proxy that adds basic auth or your existing SSO.
+### Alert rules
 
-**nginx:**
+Define rules in YAML. Drop them in `./rules/` or contribute them to the community pack.
 
-```nginx
-location / {
-  auth_basic "agentwatch";
-  auth_basic_user_file /etc/nginx/agentwatch.htpasswd;
-  proxy_pass http://localhost:3000;
-  proxy_set_header Host $host;
-  proxy_set_header X-Real-IP $remote_addr;
-}
-
-location /webhooks/ {
-  # Linear/GitHub webhooks must NOT require basic auth.
-  proxy_pass http://localhost:8080;
-}
+```yaml
+# rules/cost-spike.yaml
+name: agent_cost_spike
+when: agent.weekly_spend > 3 * agent.rolling_avg(28d)
+notify:
+  - slack: "#eng-alerts"
+  - email: "ops@example.com"
 ```
 
-**Caddy:**
+## Telemetry and privacy
 
-```
-agentwatch.example.com {
-  basicauth /* {
-    admin {env.AGENTWATCH_BASIC_AUTH_HASH}
-  }
-  reverse_proxy /webhooks/* localhost:8080
-  reverse_proxy localhost:3000
-}
-```
+> [!NOTE]
+> Telemetry is **off by default** and customer data never leaves your instance.
 
-Always exclude the webhook paths from basic auth — they authenticate via HMAC.
+If you opt in via `TELEMETRY_OPT_IN=true`, agentwatch sends only the following to a separate hosted aggregator: agent name, anonymized cost bucket, success/fail outcome, and model tier. No issue content, no code, no identifiers. The opt-in dataset powers the public benchmark at [BENCHMARK_URL](BENCHMARK_URL). See [docs/telemetry.md](docs/telemetry.md) for the full schema.
 
-### PgBouncer (DEPLOY-06)
+## Roadmap
 
-If your `DATABASE_URL` points at PgBouncer in transaction-mode (Supabase, Neon-via-PgBouncer,
-self-hosted PgBouncer), append `?pgbouncer=true` to the connection string:
+- [x] Linear Agent Session ingestion
+- [x] GitHub PR outcome correlation
+- [x] Cost / reliability / lineage dashboards
+- [x] CLI parity with dashboard
+- [ ] GitHub Issues source (beyond just PR outcomes)
+- [ ] Jira source
+- [ ] Hosted version with SSO and audit logs
+- [ ] Custom dimensions for multi-product workspaces
 
-```
-DATABASE_URL=postgres://user:pass@pgbouncer:6432/agentwatch?pgbouncer=true
-```
+## FAQ
 
-Requires PgBouncer **≥ 1.21** with `max_prepared_statements > 0`. See the
-[PgBouncer FAQ](https://www.pgbouncer.org/faq.html) for tuning. Without this flag, prepared
-statements break under transaction-mode pooling.
+<details>
+<summary>How is this different from what Linear ships natively?</summary>
 
-### Linear plan
+Linear's Triage Intelligence and Linear Agent are excellent at *operating inside Linear*. agentwatch operates *across* the agent stack — it correlates Linear events with GitHub outcomes and vendor cost data into a single agent identity. Linear has structural reasons to favor its own agent; agentwatch is vendor-neutral by design.
 
-Agent Session webhook access requires **Linear Business or Enterprise**. The Free and
-Standard plans cannot deliver `actor=app` events. agentwatch will fall back to no-op
-behavior on workspaces without the AgentSession scope.
+</details>
 
-## Project layout
+<details>
+<summary>Will this work with internal / homegrown agents?</summary>
 
-```
-packages/
-  db/       Drizzle schema + migrations (Phase 1 schema is partitioned events table + star)
-  shared/   Zod schemas, TitleHash type, query DSL types — shared between server and web
-  server/   Fastify webhook receiver + query API + Graphile Worker host
-  web/      Next.js 15 dashboard reading exclusively through the internal query API
-```
+Yes. The `@agentwatch/sdk` package emits cost, duration, and outcome events from any agent runtime. See [docs/sdk.md](docs/sdk.md).
 
-## Privacy
+</details>
 
-Issue titles are SHA-256 hashed by default with a per-workspace salt. The `issues` schema has
-no `title: string` column. Setting `LOG_LEVEL=debug` does not log webhook bodies — payload
-keys only, never values. No data leaves your instance unless `TELEMETRY_OPT_IN=true`, in
-which case daily aggregate rollups (no titles, no IDs, no costs at session granularity) are
-sent to the public benchmark aggregator. Anonymization spec ships in `docs/telemetry.md`
-(Phase 3).
+<details>
+<summary>Does it work without GitHub?</summary>
 
-## Status
+You can run it Linear-only, but you lose the revert-rate and PR-outcome signals — which are the most useful reliability metrics. We strongly recommend connecting GitHub.
 
-[![CI](https://github.com/agentwatch/agentwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/agentwatch/agentwatch/actions/workflows/ci.yml)
+</details>
 
-agentwatch is pre-v0.1. Phase 1 (Foundation) is the active milestone — see
-[`.planning/ROADMAP.md`](./.planning/ROADMAP.md). v0.1 ships when Phase 3 (Launch) success
-criteria are met.
+<details>
+<summary>What about Jira / Asana / GitHub Issues?</summary>
 
-### CI gates (all required for Phase 1)
+On the roadmap. v0 is Linear-only on purpose — go deep before going wide.
 
-Every push runs these six independent jobs. Each one maps to a load-bearing claim in the
-PRD; a failing gate is a red build, never a warning.
+</details>
 
-| Gate | Verifies |
-|------|----------|
-| `static-checks` | `req.body` not in production code (OBS-04 / Pitfall 12); `issues` schema has no `title` column (D-26 / Pitfall 13); web has no DB driver imports (API-07). |
-| `lint-typecheck-test` | `pnpm lint`, `pnpm typecheck`, `pnpm test` across all packages. |
-| `bench-webhook-ack` | 200 concurrent valid Linear webhooks; p99 < 200ms (D-31 / INGEST-04). |
-| `e2e-setup-wizard` | AgentSession warning copy verbatim; click-through gate enforced (SETUP-02 / D-13). |
-| `privacy-guard` | Seeded titles never appear in any query API response (PRIV-03 / Pitfall 13); `issues` table has no `title` column at runtime. |
-| `compose-smoke` | `docker compose up` reaches the dashboard at `:3000` within 5 minutes on a clean image (DEPLOY-01). |
+## Contributing
 
-Branch-protection should require all six jobs to pass before merge to `main`.
+PRs welcome. Good first issues are tagged [`good-first-issue`](ISSUES_URL). For larger changes, please open an issue first to discuss the approach. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and conventions.
 
-MIT licensed. Contributions welcome — see `CONTRIBUTING.md` (Phase 3).
+## License
+
+[MIT](LICENSE) © YOUR_NAME
