@@ -12,6 +12,7 @@ import rawBody from './plugins/raw-body.js';
 import agentsConfirmRoute from './routes/api/v1/agents-confirm.js';
 import queryRoute from './routes/api/v1/query.js';
 import sdkEventRoute from './routes/api/v1/sdk-event.js';
+import workspaceRoute from './routes/api/v1/workspace.js';
 import healthRoutes from './routes/health.js';
 import linearWebhookRoute from './routes/webhooks/linear.js';
 
@@ -119,6 +120,7 @@ async function main(): Promise<void> {
   await fastify.register(queryRoute);
   await fastify.register(sdkEventRoute);
   await fastify.register(agentsConfirmRoute);
+  await fastify.register(workspaceRoute);
 
   fastify.addHook('onClose', async () => {
     await pool.end();

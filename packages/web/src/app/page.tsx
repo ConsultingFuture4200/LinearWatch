@@ -1,8 +1,9 @@
-export default function Home() {
-  return (
-    <main>
-      <h1>agentwatch</h1>
-      <p>Bootstrap placeholder. Dashboard ships in Wave 3.</p>
-    </main>
-  );
+import { redirect } from 'next/navigation';
+
+/**
+ * Root path redirects to the cost view — UI-SPEC §App shell makes Cost the
+ * active P1 tab. Reliability + Lineage are P2 stubs in the same nav.
+ */
+export default function Home(): never {
+  redirect('/cost');
 }

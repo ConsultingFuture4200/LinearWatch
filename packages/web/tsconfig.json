@@ -10,8 +10,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "allowJs": true
   },
-  "include": ["next-env.d.ts", "src/**/*", "**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", "src/**/*", ".next/types/**/*.ts"],
   "exclude": ["node_modules", ".next"]
 }
