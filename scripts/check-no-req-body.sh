@@ -19,8 +19,9 @@ fi
 # Match `req.body` / `request.body` in production code, but exclude:
 # - `rawBody` (the canonical raw-buffer field)
 # - JSDoc / line comments (lines whose first non-whitespace is `*` or `//`)
-# - `Object.keys(req.body)` and `Object.keys(request.body)` — the request-logger
-#   plugin reads top-level KEYS only (D-29), never values; safe by construction
+# - `Object.keys(req.body)` / `Object.keys(request.body)` — keys, not values
+# - lines explicitly annotated `// allow-req-body: <reason>` for audited cases
+#   (e.g., the D-29 request-logger plugin reads top-level key names only)
 MATCHES=$(grep -rnE "req\.body|request\.body" \
   "${SEARCH_DIRS[@]}" \
   --include='*.ts' --include='*.tsx' \
@@ -29,6 +30,7 @@ MATCHES=$(grep -rnE "req\.body|request\.body" \
   | grep -vE ':[[:space:]]*\*' \
   | grep -vE ':[[:space:]]*//' \
   | grep -vE 'Object\.keys\((req|request)\.body\)' \
+  | grep -v 'allow-req-body' \
   || true)
 
 if [ -n "$MATCHES" ]; then
