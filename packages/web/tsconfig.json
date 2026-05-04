@@ -6,8 +6,12 @@
     "noEmit": true,
     "incremental": true,
     "composite": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "plugins": [{ "name": "next" }]
   },
-  "include": ["next-env.d.ts", "app/**/*", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "src/**/*", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", ".next"]
 }
