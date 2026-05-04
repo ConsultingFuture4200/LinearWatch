@@ -118,7 +118,26 @@ sent to the public benchmark aggregator. Anonymization spec ships in `docs/telem
 
 ## Status
 
-agentwatch is pre-v0.1. See [`.planning/ROADMAP.md`](./.planning/ROADMAP.md) for the current
-phase and outstanding plans. v0.1 ships when Phase 3 (Launch) success criteria are met.
+[![CI](https://github.com/agentwatch/agentwatch/actions/workflows/ci.yml/badge.svg)](https://github.com/agentwatch/agentwatch/actions/workflows/ci.yml)
+
+agentwatch is pre-v0.1. Phase 1 (Foundation) is the active milestone — see
+[`.planning/ROADMAP.md`](./.planning/ROADMAP.md). v0.1 ships when Phase 3 (Launch) success
+criteria are met.
+
+### CI gates (all required for Phase 1)
+
+Every push runs these six independent jobs. Each one maps to a load-bearing claim in the
+PRD; a failing gate is a red build, never a warning.
+
+| Gate | Verifies |
+|------|----------|
+| `static-checks` | `req.body` not in production code (OBS-04 / Pitfall 12); `issues` schema has no `title` column (D-26 / Pitfall 13); web has no DB driver imports (API-07). |
+| `lint-typecheck-test` | `pnpm lint`, `pnpm typecheck`, `pnpm test` across all packages. |
+| `bench-webhook-ack` | 200 concurrent valid Linear webhooks; p99 < 200ms (D-31 / INGEST-04). |
+| `e2e-setup-wizard` | AgentSession warning copy verbatim; click-through gate enforced (SETUP-02 / D-13). |
+| `privacy-guard` | Seeded titles never appear in any query API response (PRIV-03 / Pitfall 13); `issues` table has no `title` column at runtime. |
+| `compose-smoke` | `docker compose up` reaches the dashboard at `:3000` within 5 minutes on a clean image (DEPLOY-01). |
+
+Branch-protection should require all six jobs to pass before merge to `main`.
 
 MIT licensed. Contributions welcome — see `CONTRIBUTING.md` (Phase 3).

@@ -1,8 +1,37 @@
 name: CI
 on: [push, pull_request]
 jobs:
+  # Plan 01.10 — fast static gates that never need Postgres.
+  # Each script's failure mode points at exactly one Pitfall.
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - name: OBS-04 / Pitfall 12 — req.body never appears in production code
+        run: pnpm check:no-req-body
+      - name: D-26 / Pitfall 13 — issues schema has no title column
+        run: bash scripts/check-no-title-leak.sh
+      - name: API-07 — dashboard has no DB driver imports
+        run: bash scripts/check-web-no-db-import.sh
+
   lint-typecheck-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentwatch
+          POSTGRES_PASSWORD: agentwatch_dev_password
+          POSTGRES_DB: agentwatch
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U agentwatch"
+          --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -12,8 +41,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm check:no-req-body
+      - run: pnpm --filter @agentwatch/shared build
+      - run: pnpm --filter @agentwatch/db build
+      - run: pnpm --filter @agentwatch/server build
+      - name: Run unit + integration tests
+        env:
+          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
+        run: pnpm test
 
   # SETUP-02 / D-13: AgentSession warning verbatim copy gates Linear OAuth.
   # Required for the foundation phase. The verbatim button label
@@ -95,3 +129,52 @@ jobs:
         env:
           DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
         run: pnpm --filter @agentwatch/server bench:webhook-ack
+
+  # PRIV-03 / Pitfall 13: seeded titles never appear in any query API response.
+  # Required for the foundation phase.
+  privacy-guard:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentwatch
+          POSTGRES_PASSWORD: agentwatch_dev_password
+          POSTGRES_DB: agentwatch
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U agentwatch"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @agentwatch/shared build
+      - run: pnpm --filter @agentwatch/db build
+      - run: pnpm --filter @agentwatch/server build
+      - name: Privacy guard (PRIV-03, Pitfall 13)
+        env:
+          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
+        run: pnpm --filter @agentwatch/server test -- privacy-guard no-title-column
+
+  # DEPLOY-01: docker compose up reaches the dashboard within 5 minutes on a
+  # clean image. Uses scripts/smoke-compose.sh from plan 01.01 unchanged.
+  compose-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Smoke (DEPLOY-01)
+        env:
+          # Synthetic credentials so the env-var fail-fast doesn't trip during
+          # the boot probe. Real workspaces edit .env before docker compose up.
+          LINEAR_CLIENT_ID: smoke-client
+          LINEAR_CLIENT_SECRET: smoke-secret
+          LINEAR_WEBHOOK_SECRET: smoke-webhook-secret
+          AGENTWATCH_INTERNAL_API_KEY: ci-smoke-internal-1234567890
+          POSTGRES_PASSWORD: agentwatch_dev_password
+        run: bash scripts/smoke-compose.sh
