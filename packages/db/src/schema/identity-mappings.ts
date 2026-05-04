@@ -7,8 +7,8 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { agents } from './agents';
-import { workspaces } from './workspaces';
+import { agents } from './agents.js';
+import { workspaces } from './workspaces.js';
 
 /**
  * `identity_mappings` — resolver state machine output (D-15, D-16, ID-02).

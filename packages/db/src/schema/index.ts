@@ -8,15 +8,15 @@
  * Note: `events.raw_event` partition DDL lives in `migrations/0000_init.sql`,
  * NOT in any of these schema files (Drizzle has no partition DSL).
  */
-export * from './workspaces';
-export * from './teams';
-export * from './cycles';
-export * from './repos';
-export * from './agents';
-export * from './issues';
-export * from './agent-sessions';
-export * from './identity-mappings';
-export * from './workspace-warnings';
-export * from './cost-by-agent-daily';
-export * from './alert-events';
-export * from './raw-event';
+export * from './workspaces.js';
+export * from './teams.js';
+export * from './cycles.js';
+export * from './repos.js';
+export * from './agents.js';
+export * from './issues.js';
+export * from './agent-sessions.js';
+export * from './identity-mappings.js';
+export * from './workspace-warnings.js';
+export * from './cost-by-agent-daily.js';
+export * from './alert-events.js';
+export * from './raw-event.js';

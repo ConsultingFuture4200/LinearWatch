@@ -17,6 +17,6 @@
  *   `session_end`, `cost_recorded` — validated at the SDK endpoint boundary.
  *   `cost_usd` is non-negative; `tokens_in`/`tokens_out` are non-negative ints.
  */
-export * from './privacy';
-export * from './query';
-export * from './events';
+export * from './privacy.js';
+export * from './query.js';
+export * from './events.js';

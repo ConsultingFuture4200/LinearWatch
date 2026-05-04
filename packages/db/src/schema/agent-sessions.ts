@@ -1,10 +1,10 @@
 import { doublePrecision, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { agents } from './agents';
-import { cycles } from './cycles';
-import { issues } from './issues';
-import { repos } from './repos';
-import { teams } from './teams';
-import { workspaces } from './workspaces';
+import { agents } from './agents.js';
+import { cycles } from './cycles.js';
+import { issues } from './issues.js';
+import { repos } from './repos.js';
+import { teams } from './teams.js';
+import { workspaces } from './workspaces.js';
 
 /**
  * `agent_sessions` — fact table per PRD §6.1.

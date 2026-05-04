@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { agents } from './agents';
-import { workspaces } from './workspaces';
+import { agents } from './agents.js';
+import { workspaces } from './workspaces.js';
 
 /**
  * `alert_events` — table reserved for P2 ALERT-01..07.

@@ -1,6 +1,6 @@
 import { date, doublePrecision, integer, pgTable, uuid } from 'drizzle-orm/pg-core';
-import { agents } from './agents';
-import { workspaces } from './workspaces';
+import { agents } from './agents.js';
+import { workspaces } from './workspaces.js';
 
 /**
  * `cost_by_agent_daily` — DATA-06 rollup table.

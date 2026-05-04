@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { teams } from './teams';
-import { workspaces } from './workspaces';
+import { teams } from './teams.js';
+import { workspaces } from './workspaces.js';
 
 export const cycles = pgTable('cycles', {
   id: uuid('id').primaryKey().defaultRandom(),

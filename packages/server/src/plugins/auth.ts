@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
-import type { ServerDb } from '../db';
+import type { ServerDb } from '../db.js';
 
 /**
  * Bearer-token auth (RESEARCH Pattern 5 / API-06).

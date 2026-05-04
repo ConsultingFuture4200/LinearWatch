@@ -11,14 +11,20 @@
  * This package ships the schema artifact only.
  */
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import * as schema from './schema';
+import pg from 'pg';
+import * as schema from './schema/index.js';
+
+// pg ships as CommonJS — destructure from the default import so this file is
+// importable from both Node ESM at runtime and vitest's ESM-via-bundler at
+// test time.
+const { Pool } = pg;
+type PoolInstance = InstanceType<typeof pg.Pool>;
 
 export { schema };
-export * from './schema';
+export * from './schema/index.js';
 
 export interface DbHandle {
-  pool: Pool;
+  pool: PoolInstance;
   db: ReturnType<typeof drizzle<typeof schema>>;
 }
 

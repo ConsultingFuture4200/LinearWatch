@@ -1,6 +1,10 @@
 import { schema } from '@agentwatch/db';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import pg from 'pg';
+
+// pg is CJS; destructure from default import for Node ESM compatibility.
+const { Pool } = pg;
+type PoolInstance = InstanceType<typeof pg.Pool>;
 
 /**
  * Server-side Drizzle factory.
@@ -15,7 +19,7 @@ import { Pool } from 'pg';
  *   plus its own pool sizing, so we wrap drizzle directly here.
  */
 export interface ServerDbHandle {
-  pool: Pool;
+  pool: PoolInstance;
   db: ReturnType<typeof drizzle<typeof schema>>;
 }
 

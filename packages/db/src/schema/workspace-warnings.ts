@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { workspaces } from './workspaces';
+import { workspaces } from './workspaces.js';
 
 /**
  * `workspace_warnings` — D-18 detect_shared_app heuristic output.

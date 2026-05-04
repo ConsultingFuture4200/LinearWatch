@@ -1,8 +1,17 @@
 import { sql } from 'drizzle-orm';
-import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import client from 'prom-client';
-import type { ServerDb } from '../db';
+import type { ServerDb } from '../db.js';
+
+// Minimal Fastify shape needed by `registerMetricsRoute`. Using a structural
+// type instead of FastifyInstance avoids the pino-Logger generic mismatch when
+// the caller's instance was constructed with a custom loggerInstance.
+interface MinimalFastify {
+  get: (
+    path: string,
+    handler: (_req: unknown, reply: { type: (t: string) => void }) => Promise<string>,
+  ) => unknown;
+}
 
 /**
  * Prom-client metrics (D-30 / RESEARCH Pattern 7).
@@ -97,7 +106,7 @@ export default fp<MetricsPluginOptions>(async (fastify, opts) => {
  * Register the `/metrics` route. Kept separate from the plugin so the route
  * can be wired up after auth without leaking through `authBearer`.
  */
-export async function registerMetricsRoute(fastify: FastifyInstance): Promise<void> {
+export async function registerMetricsRoute(fastify: MinimalFastify): Promise<void> {
   fastify.get('/metrics', async (_req, reply) => {
     reply.type(client.register.contentType);
     return client.register.metrics();

@@ -1,8 +1,8 @@
 import type { TitleHash } from '@agentwatch/shared';
 import { customType, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { cycles } from './cycles';
-import { teams } from './teams';
-import { workspaces } from './workspaces';
+import { cycles } from './cycles.js';
+import { teams } from './teams.js';
+import { workspaces } from './workspaces.js';
 
 /**
  * `issues` — dimension table for Linear issues.
