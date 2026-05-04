@@ -1,0 +1,45 @@
+# Workspace dirs that must come from the deps/build stages, never from the host
+**/node_modules
+**/.pnpm-store
+
+# Build outputs
+**/dist
+**/.next
+**/.turbo
+**/coverage
+
+# Tooling caches
+.cache
+.eslintcache
+**/*.tsbuildinfo
+
+# VCS / editor
+.git
+.gitignore
+.github/
+.vscode
+.idea
+*.swp
+
+# Project planning artifacts (not needed in image)
+.planning/
+PRD_v0.1.0.md
+README_v1.md
+
+# Local env (image gets env from compose, not host .env)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test results
+test-results/
+playwright-report/
