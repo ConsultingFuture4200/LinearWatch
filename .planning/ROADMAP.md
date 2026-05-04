@@ -34,7 +34,7 @@
 - [x] 01.03-shared-package-PLAN.md — hashTitle()+TitleHash brand; Query API Zod enums; SDK event schemas
 - [x] 01.04-server-bootstrap-PLAN.md — Fastify + env validation + drizzle-kit migrate [BLOCKING] + pino redact + /metrics + Bearer auth
 - [x] 01.05-linear-webhook-PLAN.md — POST /webhooks/linear: HMAC verify, idempotent INSERT, async enqueue; 200-concurrent p99<200ms benchmark
-- [ ] 01.06-graphile-worker-tasks-PLAN.md — Worker entry; resolve_identity, rotate_raw_event_partitions, detect_shared_app, refresh_cost_rollup stub
+- [x] 01.06-graphile-worker-tasks-PLAN.md — Worker entry; resolve_identity, rotate_raw_event_partitions, detect_shared_app, refresh_cost_rollup stub
 - [ ] 01.07-query-api-sdk-endpoint-PLAN.md — Zod-enumerated POST /api/v1/query dispatcher; SDK event endpoint; agents-confirm endpoint
 - [ ] 01.08-dashboard-PLAN.md — Next.js 15 cost view + identity side panel + P2-stub tabs + settings; lib/query.ts as the only data path
 - [ ] 01.09-setup-wizard-seed-PLAN.md — 7-step wizard with verbatim D-13 AgentSession warning; Playwright e2e; --seed synthetic data
