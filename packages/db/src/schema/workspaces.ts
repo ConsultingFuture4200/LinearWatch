@@ -12,5 +12,9 @@ export const workspaces = pgTable('workspaces', {
   apiKeyHash: text('api_key_hash').notNull(),
   workspaceSalt: text('workspace_salt').notNull(),
   storeTitlesPlain: boolean('store_titles_plain').notNull().default(false),
+  // Plan 01.09: optional GitHub PAT collected by the setup wizard step 4.
+  // Used by the P2 GitHub enrichment worker (PRD §6.4). Stored base64-encoded.
+  // Nullable because the wizard offers a "Skip - I'll add this later" CTA.
+  githubPatEncoded: text('github_pat_encoded'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
