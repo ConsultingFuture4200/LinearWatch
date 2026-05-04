@@ -52,11 +52,11 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_priv');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_priv');
 
 const SECRET = 'priv-webhook-secret';
-const PLAINTEXT_KEY = 'agw_priv_test_key_xyz_1234567890';
+const PLAINTEXT_KEY = 'lw_priv_test_key_xyz_1234567890';
 const KEY_HASH = createHash('sha256').update(PLAINTEXT_KEY).digest('hex');
 const WS = '00000000-0000-4000-8000-000000000001';
 
@@ -114,8 +114,8 @@ describe.skipIf(!dbReachable)('privacy guard (PRIV-03, Pitfall 13)', () => {
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_priv');
-    await admin.query('CREATE DATABASE agentwatch_priv');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_priv');
+    await admin.query('CREATE DATABASE linearwatch_priv');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

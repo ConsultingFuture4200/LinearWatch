@@ -52,7 +52,7 @@ export function AgentsessionWarningModal(): React.JSX.Element {
   function handlePause(): void {
     // Best-effort marker for the future "Resume setup" pill (P2).
     try {
-      localStorage.setItem('agw_setup_paused_at', new Date().toISOString());
+      localStorage.setItem('lw_setup_paused_at', new Date().toISOString());
     } catch {
       /* localStorage may be unavailable in private browsing — non-fatal */
     }

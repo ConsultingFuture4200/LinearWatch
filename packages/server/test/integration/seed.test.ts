@@ -18,10 +18,10 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_seed');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_seed');
 
-const PLAINTEXT_KEY = 'agw_test_seed_key_xyz';
+const PLAINTEXT_KEY = 'lw_test_seed_key_xyz';
 const KEY_HASH = createHash('sha256').update(PLAINTEXT_KEY).digest('hex');
 const WS = '00000000-0000-4000-8000-000000000001';
 const SALT = 'a'.repeat(64);
@@ -63,8 +63,8 @@ describe.skipIf(!dbReachable)('Seed endpoints (POST /api/v1/seed, /admin/clear-s
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_seed');
-    await admin.query('CREATE DATABASE agentwatch_seed');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_seed');
+    await admin.query('CREATE DATABASE linearwatch_seed');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

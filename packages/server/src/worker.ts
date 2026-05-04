@@ -11,7 +11,7 @@ import { rotateRawEventPartitions } from './tasks/rotate-raw-event-partitions.js
  * Graphile Worker entry point — D-03 separate process.
  *
  * Runs in its own container alongside the `web` container (compose.yml).
- * Both containers share the same `@agentwatch/server` source tree because
+ * Both containers share the same `@linearwatch/server` source tree because
  * the tasks reuse `env.ts`, `plugins/metrics.ts` (resolverConfidenceHistogram),
  * and the Drizzle schema — bundling them into a single image is the simplest
  * deployment for a self-hoster.

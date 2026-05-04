@@ -19,10 +19,10 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 // Each integration test uses its own dedicated database.
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_query');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_query');
 
-const PLAINTEXT_KEY = 'agw_test_query_key_xyz';
+const PLAINTEXT_KEY = 'lw_test_query_key_xyz';
 const KEY_HASH = createHash('sha256').update(PLAINTEXT_KEY).digest('hex');
 const WS = '00000000-0000-4000-8000-000000000001';
 
@@ -75,8 +75,8 @@ describe.skipIf(!dbReachable)('POST /api/v1/query', () => {
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_query');
-    await admin.query('CREATE DATABASE agentwatch_query');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_query');
+    await admin.query('CREATE DATABASE linearwatch_query');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

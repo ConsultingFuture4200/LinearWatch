@@ -9,8 +9,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
  *
  * Requires a live Postgres instance reachable at DATABASE_URL_TEST. Local dev:
  *   docker compose up -d postgres
- *   DATABASE_URL_TEST=postgres://agentwatch:agentwatch_dev_password@localhost:5432/agentwatch_test \
- *     pnpm --filter @agentwatch/db test
+ *   DATABASE_URL_TEST=postgres://linearwatch:linearwatch_dev_password@localhost:5432/linearwatch_test \
+ *     pnpm --filter @linearwatch/db test
  *
  * If DATABASE_URL_TEST is unset OR no Postgres is reachable, the suite is skipped
  * (so unit-only CI jobs without a Postgres service container don't fail). The
@@ -19,7 +19,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const TEST_DB_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/agentwatch_test';
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/linearwatch_test';
 
 async function postgresReachable(): Promise<boolean> {
   const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
@@ -46,10 +46,10 @@ describeIfPg('migration applies cleanly to postgres:16', () => {
     const adminPool = new Pool({ connectionString: adminUrl });
     // Terminate any sessions on the test DB before drop/create.
     await adminPool.query(
-      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='agentwatch_test' AND pid <> pg_backend_pid()",
+      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='linearwatch_test' AND pid <> pg_backend_pid()",
     );
-    await adminPool.query('DROP DATABASE IF EXISTS agentwatch_test');
-    await adminPool.query('CREATE DATABASE agentwatch_test');
+    await adminPool.query('DROP DATABASE IF EXISTS linearwatch_test');
+    await adminPool.query('CREATE DATABASE linearwatch_test');
     await adminPool.end();
     pool = new Pool({ connectionString: TEST_DB_URL });
     db = drizzle(pool);

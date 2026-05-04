@@ -5,9 +5,9 @@ import { z } from 'zod';
  * per missing required env var.
  *
  * Required vars: DATABASE_URL, LINEAR_CLIENT_ID, LINEAR_CLIENT_SECRET,
- * LINEAR_WEBHOOK_SECRET, AGENTWATCH_INTERNAL_API_KEY.
+ * LINEAR_WEBHOOK_SECRET, LINEARWATCH_INTERNAL_API_KEY.
  *
- * AGENTWATCH_INTERNAL_API_KEY is required so the web container can authenticate
+ * LINEARWATCH_INTERNAL_API_KEY is required so the web container can authenticate
  * to the server.
  *
  * WORKSPACE_ID is optional at boot (set after the setup wizard runs).
@@ -21,7 +21,7 @@ const EnvSchema = z.object({
   LINEAR_CLIENT_ID: z.string().min(1),
   LINEAR_CLIENT_SECRET: z.string().min(1),
   LINEAR_WEBHOOK_SECRET: z.string().min(1),
-  AGENTWATCH_INTERNAL_API_KEY: z.string().min(16),
+  LINEARWATCH_INTERNAL_API_KEY: z.string().min(16),
 
   // Set by setup wizard, not at first boot. Empty string from compose env-interpolation
   // (`${WORKSPACE_ID:-}`) is treated as unset.
@@ -85,7 +85,7 @@ interface BannerLogger {
  * info so it appears in production logs without LOG_LEVEL=debug.
  */
 export function logBootBanner(env: Env, log: BannerLogger): void {
-  log.info(`agentwatch starting on port ${env.PORT}`);
+  log.info(`linearwatch starting on port ${env.PORT}`);
   log.info(`telemetry: ${env.TELEMETRY_OPT_IN ? 'on' : 'off'}`);
   log.info(`identity_confidence_threshold: ${env.IDENTITY_CONFIDENCE_THRESHOLD}`);
   log.info(`log_level: ${env.LOG_LEVEL}`);

@@ -9,9 +9,9 @@ import { defineConfig } from '@playwright/test';
  * is true outside CI so contributors can iterate without restarting on
  * every run.
  *
- * The wizard does NOT require the agentwatch server to be reachable for
+ * The wizard does NOT require the linearwatch server to be reachable for
  * the AgentSession-warning step (the modal is purely client UI). The other
- * steps (workspace creation, seed) require AGENTWATCH_INTERNAL_URL to
+ * steps (workspace creation, seed) require LINEARWATCH_INTERNAL_URL to
  * point at a running server; those tests skip cleanly when it is not set.
  */
 export default defineConfig({
@@ -23,16 +23,16 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm --filter @agentwatch/web start',
+    command: 'pnpm --filter @linearwatch/web start',
     port: 3000,
     timeout: 120_000,
     reuseExistingServer: !process.env.CI,
     env: {
       // Build-time env values; the warning step does not call the server,
       // so a placeholder is sufficient for SETUP-02 verification.
-      AGENTWATCH_INTERNAL_URL: process.env.AGENTWATCH_INTERNAL_URL ?? 'http://localhost:8080',
-      AGENTWATCH_INTERNAL_API_KEY:
-        process.env.AGENTWATCH_INTERNAL_API_KEY ?? 'test-internal-key-1234567890',
+      LINEARWATCH_INTERNAL_URL: process.env.LINEARWATCH_INTERNAL_URL ?? 'http://localhost:8080',
+      LINEARWATCH_INTERNAL_API_KEY:
+        process.env.LINEARWATCH_INTERNAL_API_KEY ?? 'test-internal-key-1234567890',
     },
   },
 });

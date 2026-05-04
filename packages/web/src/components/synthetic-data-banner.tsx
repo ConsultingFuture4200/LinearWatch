@@ -3,7 +3,7 @@ import { FlaskConical } from 'lucide-react';
 /**
  * UI-SPEC §Synthetic-data banner — pinned to the top of the dashboard
  * when seed rows exist. Copy is verbatim:
- *   "Synthetic data — clear via `agentwatch admin clear-seed`"
+ *   "Synthetic data — clear via `linearwatch admin clear-seed`"
  *
  * NOT dismissable (UI-SPEC: "screenshot-safety guarantee"). The dashboard
  * layout decides whether to render this based on `fetchSeedStatus()`.
@@ -14,7 +14,7 @@ export function SyntheticDataBanner(): React.JSX.Element {
       <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
       <p className="text-sm">
         Synthetic data — clear via{' '}
-        <code className="font-mono text-xs">agentwatch admin clear-seed</code>
+        <code className="font-mono text-xs">linearwatch admin clear-seed</code>
       </p>
     </output>
   );

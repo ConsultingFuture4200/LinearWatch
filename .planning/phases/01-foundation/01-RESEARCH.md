@@ -41,10 +41,10 @@ Three notable corrections to upstream documents discovered during version verifi
 - **D-10:** SDK endpoint requires caller-supplied `idempotency_key` in body; server synthesizes `sha256(workspace_id + session_id + event_type + minute_bucket(occurred_at))` if absent.
 
 **Setup Wizard Surface & Flow**
-- **D-11:** **Dashboard-first** wizard in P1. CLI `agentwatch setup` is a thin shell printing a docker-compose-up message + dashboard URL.
+- **D-11:** **Dashboard-first** wizard in P1. CLI `linearwatch setup` is a thin shell printing a docker-compose-up message + dashboard URL.
 - **D-12:** Wizard step order: (1) Welcome + system check, (2) AgentSession visibility warning, (3) Linear OAuth, (4) GitHub PAT (optional, P2), (5) Workspace name + API key generation, (6) `--seed` offer, (7) Done — webhook URL + cURL test.
 - **D-13:** AgentSession warning copy (verbatim): *"Heads up: enabling Linear's AgentSession category modifies the workspace UI for every member of your Linear workspace, not just you. Linear shows agent activity in a dedicated UI category once an OAuth app with AgentSession scope is approved. If your team has not been told to expect this, pause and notify them before continuing."* User must click "I've notified my team" before OAuth proceeds.
-- **D-14:** Workspace API keys: `agw_` + 32 bytes base64url; stored sha256-hashed in `workspaces.api_key_hash`. Plaintext displayed once.
+- **D-14:** Workspace API keys: `lw_` + 32 bytes base64url; stored sha256-hashed in `workspaces.api_key_hash`. Plaintext displayed once.
 
 **Identity Resolver Execution Model**
 - **D-15:** Resolver runs as a Graphile Worker `resolve_identity` job, enqueued from webhook handler after raw INSERT. Idempotent on `(workspace_id, raw_event_id)`.
@@ -74,7 +74,7 @@ Three notable corrections to upstream documents discovered during version verifi
 
 **Observability**
 - **D-29:** pino never logs `req.body`. Webhook log line fields only: `delivery_id`, `source`, `event_type`, `bytes_received`, `latency_ms`. `LOG_LEVEL=debug` adds `payload_keys: string[]` (top-level keys only, never values). Custom Fastify request logger plugin replaces default.
-- **D-30:** `/metrics` exposes: `agentwatch_events_received_total{source}` (counter), `agentwatch_webhook_ack_seconds` (histogram), `agentwatch_jobs_queue_depth{job_name}` (gauge), `agentwatch_identity_resolver_confidence` (histogram), `agentwatch_enrichment_lag_seconds{source}` (gauge — stub returning 0 in P1).
+- **D-30:** `/metrics` exposes: `linearwatch_events_received_total{source}` (counter), `linearwatch_webhook_ack_seconds` (histogram), `linearwatch_jobs_queue_depth{job_name}` (gauge), `linearwatch_identity_resolver_confidence` (histogram), `linearwatch_enrichment_lag_seconds{source}` (gauge — stub returning 0 in P1).
 
 **Performance Verification**
 - **D-31:** P1 ships smoke benchmark `packages/server/test/perf/webhook-ack.bench.ts` — 200 concurrent valid Linear webhooks, asserts p99 < 200ms. Runs in CI as foundation phase gate. Full 100k-row dashboard benchmark is P2.
@@ -94,8 +94,8 @@ Three notable corrections to upstream documents discovered during version verifi
 ### Deferred Ideas (OUT OF SCOPE)
 
 **To Phase 2:**
-- CLI binary `agentwatch` with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` (CLI-01..09).
-- Published SDK packages `@agentwatch/sdk` (Node) and `agentwatch` (PyPI). The endpoint is in P1; the packages are P2.
+- CLI binary `linearwatch` with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` (CLI-01..09).
+- Published SDK packages `@linearwatch/sdk` (Node) and `linearwatch` (PyPI). The endpoint is in P1; the packages are P2.
 - GitHub webhook receiver (INGEST-02).
 - Vendor API enrichment (Cursor + one other) — INGEST-07/08.
 - `outcome` column population via GitHub PR detection (INGEST-09).
@@ -633,7 +633,7 @@ export function hashTitle(rawTitle: string, workspaceSalt: string): TitleHash {
 ```typescript
 // packages/db/src/schema/issues.ts
 import { pgTable, text, uuid, timestamp } from 'drizzle-orm/pg-core';
-import type { TitleHash } from '@agentwatch/shared/privacy';
+import type { TitleHash } from '@linearwatch/shared/privacy';
 
 // Custom column type: text in Postgres, TitleHash in TypeScript
 import { customType } from 'drizzle-orm/pg-core';
@@ -815,20 +815,20 @@ export async function logWebhookReceipt(req, reply, source: 'linear' | 'github' 
 import client from 'prom-client';
 
 export const eventsReceived = new client.Counter({
-  name: 'agentwatch_events_received_total',
+  name: 'linearwatch_events_received_total',
   help: 'Number of webhook events received',
   labelNames: ['source'] as const,
 });
 
 export const webhookAckSeconds = new client.Histogram({
-  name: 'agentwatch_webhook_ack_seconds',
+  name: 'linearwatch_webhook_ack_seconds',
   help: 'Time to ack a webhook',
   labelNames: ['source'] as const,
   buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1, 2], // tuned for 200ms SLA
 });
 
 export const jobsQueueDepth = new client.Gauge({
-  name: 'agentwatch_jobs_queue_depth',
+  name: 'linearwatch_jobs_queue_depth',
   help: 'Number of pending Graphile Worker jobs by name',
   labelNames: ['job_name'] as const,
   async collect() {
@@ -847,13 +847,13 @@ export const jobsQueueDepth = new client.Gauge({
 });
 
 export const resolverConfidenceHistogram = new client.Histogram({
-  name: 'agentwatch_identity_resolver_confidence',
+  name: 'linearwatch_identity_resolver_confidence',
   help: 'Distribution of identity resolver confidence scores',
   buckets: [0, 0.25, 0.5, 0.75, 0.8, 0.9, 1.0],
 });
 
 export const enrichmentLagSeconds = new client.Gauge({
-  name: 'agentwatch_enrichment_lag_seconds',
+  name: 'linearwatch_enrichment_lag_seconds',
   help: 'Lag between source event and enrichment completion (P1: stub returning 0)',
   labelNames: ['source'] as const,
 });
@@ -871,7 +871,7 @@ export async function registerMetricsRoute(fastify) {
 
 **What:** Server Components fetch from `POST /api/v1/query`. The "absolute URL" gotcha: Server Components in production need an absolute URL when calling external services, but a same-origin fetch in development can use a relative path **only if** Next.js is configured to allow it. The clean solution is to call the query handler **directly as a function** when both ship in the same Next.js app (D-03 web container), or use a known internal URL via env var.
 
-**Recommended pattern for D-03 (Next.js + Fastify in the SAME `web` container):** This is actually two services. Cleanest: keep them as separate runtimes, but the Server Component fetches via `process.env.AGENTWATCH_INTERNAL_URL` (e.g., `http://127.0.0.1:8080`) injected by docker-compose. The Bearer key is server-side; never reaches the browser.
+**Recommended pattern for D-03 (Next.js + Fastify in the SAME `web` container):** This is actually two services. Cleanest: keep them as separate runtimes, but the Server Component fetches via `process.env.LINEARWATCH_INTERNAL_URL` (e.g., `http://127.0.0.1:8080`) injected by docker-compose. The Bearer key is server-side; never reaches the browser.
 
 **Alternative pattern (even simpler):** Co-locate the query handler inside Next.js as a Route Handler at `app/api/v1/query/route.ts`. Then the Server Component fetches `${process.env.NEXT_INTERNAL_URL ?? 'http://localhost:3000'}/api/v1/query`. CONTEXT.md D-25 puts the API in `packages/server/`; the planner should pick one. **Recommendation:** keep Fastify owning `/api/v1/query` (so the future CLI in P2 hits the same endpoint without going through Next.js), and have Next.js Server Components fetch via internal URL.
 
@@ -883,11 +883,11 @@ import { CostChart } from '@/components/cost-chart';
 
 async function fetchCostByAgent(window: string) {
   // Server-side fetch; runs in Node, not browser. API key stays server-side.
-  const res = await fetch(`${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/query`, {
+  const res = await fetch(`${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/query`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'authorization': `Bearer ${process.env.AGENTWATCH_INTERNAL_API_KEY}`,
+      'authorization': `Bearer ${process.env.LINEARWATCH_INTERNAL_API_KEY}`,
     },
     body: JSON.stringify({
       metric: 'cost_by_agent',
@@ -938,8 +938,8 @@ export type QueryRequest = z.infer<typeof QueryRequest>;
 // packages/server/src/query/dispatcher.ts
 import { costByAgent } from './metrics/cost-by-agent';
 import { agentSessionCount } from './metrics/agent-session-count';
-import type { QueryRequest } from '@agentwatch/shared/query';
-import type { MetricName } from '@agentwatch/shared/query';
+import type { QueryRequest } from '@linearwatch/shared/query';
+import type { MetricName } from '@linearwatch/shared/query';
 
 const handlers: Record<z.infer<typeof MetricName>, (req: QueryRequest) => Promise<QueryResult>> = {
   cost_by_agent: costByAgent,
@@ -1102,8 +1102,8 @@ The 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` ALL belong to Phas
 5. **Does Next.js 15.5 require a workaround for absolute URL in same-process Server Component fetches?**
    - What we know: Server Components run in Node and can use any URL with `fetch()`. The "absolute URL" gotcha applies when fetching the same origin without a host header.
    - What's unclear: whether the planner picks "Next.js Route Handler at /api/v1/query" or "Fastify in a separate container served via internal hostname."
-   - Recommendation: keep Fastify owning the API (so the P2 CLI hits the same endpoint). Web container fetches via `AGENTWATCH_INTERNAL_URL` env var. Two-process / one-container deployment is fine.
-   - **RESOLVED:** Fastify owns `/api/v1/query`; web Server Components fetch via `AGENTWATCH_INTERNAL_URL` (absolute URL). Implemented in 01.07 (query API on Fastify) and 01.08 (web fetcher).
+   - Recommendation: keep Fastify owning the API (so the P2 CLI hits the same endpoint). Web container fetches via `LINEARWATCH_INTERNAL_URL` env var. Two-process / one-container deployment is fine.
+   - **RESOLVED:** Fastify owns `/api/v1/query`; web Server Components fetch via `LINEARWATCH_INTERNAL_URL` (absolute URL). Implemented in 01.07 (query API on Fastify) and 01.08 (web fetcher).
 
 6. **Single-tenant workspace ID constant — where does it live?**
    - What we know: P1 is single-tenant; all rows belong to one workspace.
@@ -1121,7 +1121,7 @@ The 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` ALL belong to Phas
 | Node.js 22 | server, web, worker | ✓ | 22.22.2 (matches LTS) | — |
 | pnpm | monorepo workflow (D-25) | ✗ | — | `corepack enable && corepack prepare pnpm@latest --activate` (one-line install) |
 | Bun | CLI compile (P2 only) | ✗ | — | Not needed in P1 |
-| psql | local debugging (optional) | ✗ | — | Use `docker exec -it agentwatch-postgres-1 psql ...` instead |
+| psql | local debugging (optional) | ✗ | — | Use `docker exec -it linearwatch-postgres-1 psql ...` instead |
 | git | version control | ✓ | 2.34.1 | — |
 | Postgres 16 | datastore | (via Docker) | postgres:16-alpine | — |
 
@@ -1150,7 +1150,7 @@ The 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` ALL belong to Phas
 
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|--------------|
-| INGEST-04 / D-31 | Webhook ack p99 < 200ms under 200 concurrent | benchmark | `pnpm --filter @agentwatch/server bench:webhook-ack` | ❌ Wave 0 |
+| INGEST-04 / D-31 | Webhook ack p99 < 200ms under 200 concurrent | benchmark | `pnpm --filter @linearwatch/server bench:webhook-ack` | ❌ Wave 0 |
 | INGEST-05 | Same Linear payload replayed → 1 row | integration | `pnpm vitest run integration/idempotency` | ❌ Wave 0 |
 | INGEST-01 | Invalid HMAC → 401 | unit | `pnpm vitest run routes/webhooks/linear` | ❌ Wave 0 |
 | INGEST-01 | Missing `Linear-Delivery` → 400 | unit | `pnpm vitest run routes/webhooks/linear` | ❌ Wave 0 |
@@ -1166,7 +1166,7 @@ The 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` ALL belong to Phas
 | OBS-02 / D-30 | `/metrics` exposes all 5 named metrics | integration | `pnpm vitest run routes/metrics` | ❌ Wave 0 |
 | DEPLOY-01 | `docker compose up` reaches `:3000` within 5 min | smoke | `bash scripts/smoke-compose.sh` (timed) | ❌ Wave 0 |
 | DEPLOY-03 | Missing required env var → fail-fast at startup | unit | `pnpm vitest run env` | ❌ Wave 0 |
-| SETUP-02 | Wizard renders D-13 verbatim copy before OAuth proceeds | e2e (web) | `pnpm --filter @agentwatch/web test:e2e` (Playwright) | ❌ Wave 0 |
+| SETUP-02 | Wizard renders D-13 verbatim copy before OAuth proceeds | e2e (web) | `pnpm --filter @linearwatch/web test:e2e` (Playwright) | ❌ Wave 0 |
 
 ### Sampling Rate
 

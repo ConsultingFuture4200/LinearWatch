@@ -18,7 +18,7 @@ import Link from 'next/link';
  */
 const HEADING = 'Connect your Linear workspace.';
 const BODY =
-  'agentwatch needs OAuth access with the AgentSession scope to receive agent activity webhooks. We never store issue titles in plaintext — they are hashed at the type level (see Settings → Privacy).';
+  'linearwatch needs OAuth access with the AgentSession scope to receive agent activity webhooks. We never store issue titles in plaintext — they are hashed at the type level (see Settings → Privacy).';
 
 const SCOPES = ['read', 'admin', 'app:assignable', 'app:mentionable'].join(',');
 
@@ -38,7 +38,7 @@ function buildAuthorizeUrl(clientId: string, redirectUri: string, state: string)
 export default function LinearOAuthPage(): React.JSX.Element {
   const clientId = process.env.LINEAR_CLIENT_ID ?? '';
   const publicHost =
-    process.env.AGENTWATCH_PUBLIC_URL ?? process.env.NEXT_PUBLIC_AGENTWATCH_PUBLIC_URL ?? '';
+    process.env.LINEARWATCH_PUBLIC_URL ?? process.env.NEXT_PUBLIC_LINEARWATCH_PUBLIC_URL ?? '';
   const redirectUri = `${publicHost}/setup/linear-oauth/callback`;
   // P1: state is a static placeholder. P2 hardens this to a per-session
   // signed token verified in the callback route.

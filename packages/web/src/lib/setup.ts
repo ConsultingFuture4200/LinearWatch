@@ -1,5 +1,5 @@
 /**
- * Server-only HTTP wrappers around the agentwatch internal /api/v1/setup/*
+ * Server-only HTTP wrappers around the linearwatch internal /api/v1/setup/*
  * endpoints (Plan 01.09). Mirrors lib/api.ts in style.
  *
  * Bootstrap-window calls (workspace creation, OAuth callback, /setup/state)
@@ -13,7 +13,7 @@
 
 import { cookies } from 'next/headers';
 
-const SETUP_COOKIE = 'agw_setup_key';
+const SETUP_COOKIE = 'lw_setup_key';
 
 export interface SetupState {
   has_workspace: boolean;
@@ -27,7 +27,7 @@ export interface BootstrapResult {
 }
 
 function internalUrl(path: string): string {
-  const base = process.env.AGENTWATCH_INTERNAL_URL ?? 'http://localhost:8080';
+  const base = process.env.LINEARWATCH_INTERNAL_URL ?? 'http://localhost:8080';
   return `${base}${path}`;
 }
 

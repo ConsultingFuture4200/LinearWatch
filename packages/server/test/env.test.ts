@@ -6,7 +6,7 @@ const FULL_ENV = {
   LINEAR_CLIENT_ID: 'cid',
   LINEAR_CLIENT_SECRET: 'secret',
   LINEAR_WEBHOOK_SECRET: 'whsec',
-  AGENTWATCH_INTERNAL_API_KEY: '1234567890123456abcdef',
+  LINEARWATCH_INTERNAL_API_KEY: '1234567890123456abcdef',
 } as const;
 
 describe('loadEnv', () => {
@@ -41,7 +41,7 @@ describe('loadEnv', () => {
       .flat()
       .filter((s): s is string => typeof s === 'string' && s.startsWith('FATAL'));
     // Five required vars: DATABASE_URL, LINEAR_CLIENT_ID, LINEAR_CLIENT_SECRET,
-    // LINEAR_WEBHOOK_SECRET, AGENTWATCH_INTERNAL_API_KEY
+    // LINEAR_WEBHOOK_SECRET, LINEARWATCH_INTERNAL_API_KEY
     expect(lines.length).toBeGreaterThanOrEqual(5);
   });
 

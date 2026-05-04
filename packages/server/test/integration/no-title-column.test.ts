@@ -23,8 +23,8 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_no_title');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_no_title');
 
 async function adminReachable(): Promise<boolean> {
   const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
@@ -51,8 +51,8 @@ describe.skipIf(!dbReachable)('issues table has no title column (D-26, Pitfall 1
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_no_title');
-    await admin.query('CREATE DATABASE agentwatch_no_title');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_no_title');
+    await admin.query('CREATE DATABASE linearwatch_no_title');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

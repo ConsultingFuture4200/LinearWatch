@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const jbm = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata = {
-  title: 'agentwatch',
+  title: 'linearwatch',
   description: 'Cross-agent attribution for Linear workspaces',
 };
 
@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }): React
           attribute="class"
           defaultTheme="system"
           enableSystem
-          storageKey="agentwatch-theme"
+          storageKey="linearwatch-theme"
         >
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />

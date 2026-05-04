@@ -3,7 +3,7 @@
 import { bootstrapWorkspace, saveGithubPat, setSetupKeyCookie } from '@/lib/setup';
 import { cookies } from 'next/headers';
 
-const PAT_COOKIE = 'agw_setup_github_pat';
+const PAT_COOKIE = 'lw_setup_github_pat';
 
 export interface GenerateKeyResult {
   ok: boolean;

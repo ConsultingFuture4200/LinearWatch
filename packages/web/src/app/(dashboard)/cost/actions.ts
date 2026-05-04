@@ -7,7 +7,7 @@ import { confirmAgent } from '@/lib/api';
  *
  * Wraps the server-only `confirmAgent` HTTP call so the client component
  * can `await` it as if it were a regular function. Next.js handles the
- * RPC plumbing — the AGENTWATCH_INTERNAL_API_KEY never reaches the
+ * RPC plumbing — the LINEARWATCH_INTERNAL_API_KEY never reaches the
  * browser (T-08-01).
  *
  * Errors propagate to the client as thrown exceptions, which the panel

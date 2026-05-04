@@ -5,7 +5,7 @@ subsystem: foundation
 tags: [setup-wizard, agentsession-warning, seed, oauth, dash-05, dash-06, setup-01, setup-02, setup-03, setup-04]
 requires:
   - "Plan 01.04 server bootstrap (Fastify + authBearer plugin)"
-  - "Plan 01.03 @agentwatch/shared hashTitle()"
+  - "Plan 01.03 @linearwatch/shared hashTitle()"
   - "Plan 01.07 query API + workspace API key Bearer auth"
   - "Plan 01.08 dashboard /cost + synthetic-data banner driven by *-demo agents"
 provides:
@@ -17,14 +17,14 @@ provides:
   - "packages/web/src/components/agentsession-warning-modal.tsx — D-13 verbatim load-bearing copy"
   - "packages/web/src/components/wizard-step-indicator.tsx — 7-dot indicator"
   - "packages/web/src/lib/setup.ts — server-only HTTP wrappers + setup-cookie helpers"
-  - "packages/server/bin/agentwatch.js — D-11 CLI placeholder binary"
+  - "packages/server/bin/linearwatch.js — D-11 CLI placeholder binary"
   - "Playwright e2e: 3 tests gating SETUP-02 verbatim copy + click-through"
   - "CI job e2e-setup-wizard"
   - "0001_setup_github_pat migration: workspaces.github_pat_encoded column"
 affects:
   - "Plan 01.10 (CI gates) inherits the e2e-setup-wizard job and the new lint-clean files"
   - "Future P2 GitHub enrichment worker reads workspaces.github_pat_encoded"
-  - "Future P2 CLI ships full agentwatch binary; placeholder is replaced"
+  - "Future P2 CLI ships full linearwatch binary; placeholder is replaced"
 tech-stack:
   added:
     - "@playwright/test 1.59.1 (e2e testing — peer-compatible with Next 15.5)"
@@ -39,7 +39,7 @@ key-files:
     - "packages/server/src/routes/api/v1/setup.ts"
     - "packages/server/src/routes/api/v1/seed.ts"
     - "packages/server/src/seed/synthetic.ts"
-    - "packages/server/bin/agentwatch.js"
+    - "packages/server/bin/linearwatch.js"
     - "packages/server/test/integration/setup.test.ts"
     - "packages/server/test/integration/seed.test.ts"
     - "packages/db/migrations/0001_setup_github_pat.sql"
@@ -64,7 +64,7 @@ key-files:
     - "packages/db/migrations/meta/_journal.json (added 0001 entry)"
     - "packages/db/src/schema/workspaces.ts (added githubPatEncoded column)"
     - "packages/server/src/index.ts (registered setup + seed routes)"
-    - "packages/server/package.json (bin.agentwatch entry)"
+    - "packages/server/package.json (bin.linearwatch entry)"
     - "packages/web/package.json (test:e2e script + @playwright/test devDep)"
     - ".github/workflows/ci.yml (e2e-setup-wizard job)"
     - ".gitignore (playwright-report/, test-results/)"
@@ -73,8 +73,8 @@ key-files:
 decisions:
   - "Plan-required path 'packages/web/src/app/(setup)/...' produces wrong URLs (Next.js route groups don't add path segments). Renamed to 'packages/web/src/app/setup/...' so /setup/* URLs work — Rule 1 (bug)."
   - "Route handler placement: plan listed packages/web/src/app/(setup)/linear-oauth/route.ts but a route.ts at that path would conflict with page.tsx. Moved the OAuth callback to packages/web/src/app/setup/linear-oauth/callback/route.ts."
-  - "GitHub PAT collected at step 4 BEFORE workspace exists (D-12 step order). Stored in httpOnly cookie agw_setup_github_pat; persisted to /api/v1/setup/github-pat in step 5 server action right after the workspace API key is generated. The PAT cookie is cleared after persistence."
-  - "Setup key cookie (agw_setup_key, httpOnly, path=/, 30-min maxAge) carries the plaintext workspace API key through steps 5-7 so /api/v1/seed can be authenticated server-side without leaking the key into URLs (T-09-01 mitigation). Cleared at step 7."
+  - "GitHub PAT collected at step 4 BEFORE workspace exists (D-12 step order). Stored in httpOnly cookie lw_setup_github_pat; persisted to /api/v1/setup/github-pat in step 5 server action right after the workspace API key is generated. The PAT cookie is cleared after persistence."
+  - "Setup key cookie (lw_setup_key, httpOnly, path=/, 30-min maxAge) carries the plaintext workspace API key through steps 5-7 so /api/v1/seed can be authenticated server-side without leaking the key into URLs (T-09-01 mitigation). Cleared at step 7."
   - "Linear OAuth state token is the static literal 'p1-setup' in P1. Per CONTEXT.md D-13/T-09-03 a per-session signed token is the long-term mitigation; P1 ships the simpler version with a documented follow-up."
   - "GitHub PAT persisted base64-encoded on workspaces.github_pat_encoded (new column, migration 0001). Not encrypted at rest in P1 — single-tenant self-host means the same Postgres also holds session data. P2 can rotate to a sealed-secret column."
   - "Verbatim D-13 copy is duplicated: once in the modal client component (the visible copy + alertdialog announcement) and once in a sr-only div on the warning page. The page-level copy ensures static grep checks pass without traversing client bundles, and gives screen readers that ignore alertdialog announcements a fallback."
@@ -94,7 +94,7 @@ metrics:
 
 # Phase 1 Plan 09: Setup Wizard + Synthetic Seed Summary
 
-The agentwatch P1 onboarding flow is complete. Visiting `/setup` walks a
+The linearwatch P1 onboarding flow is complete. Visiting `/setup` walks a
 self-hoster through 7 steps in roughly 4 minutes: welcome and system
 check, a load-bearing verbatim D-13 AgentSession warning gated by
 "I've notified my team", Linear OAuth, optional GitHub PAT, workspace
@@ -112,7 +112,7 @@ automatically once the wizard's seed inserts the 3 `*-demo` agents.
 - `GET  /api/v1/setup/state` — public; returns `has_workspace` and
   `has_seed_data` so `/setup` can decide whether to redirect to `/cost`.
 - `POST /api/v1/setup/workspace` — bootstrap-only (refuses with 409 once
-  any workspace exists). Generates `agw_` + 32 base64url bytes for the
+  any workspace exists). Generates `lw_` + 32 base64url bytes for the
   plaintext key, stores `sha256(plaintext)` in `workspaces.api_key_hash`,
   generates `workspace_salt`. Plaintext key returned ONCE.
 - `POST /api/v1/setup/linear-oauth/callback` — minimal P1 acknowledgement
@@ -125,7 +125,7 @@ automatically once the wizard's seed inserts the 3 `*-demo` agents.
 `packages/server/src/seed/synthetic.ts` (D-07): inserts 3 demo agents
 (`cursor-demo`, `devin-demo`, `internal-bot-demo`), 2 demo teams, 1 demo
 cycle, 3 demo issues with hashed titles via
-`@agentwatch/shared#hashTitle`, and 50 agent sessions distributed across
+`@linearwatch/shared#hashTitle`, and 50 agent sessions distributed across
 14 days. One day is intentionally an anomaly at $20 (>3x rolling avg) so
 the cost view's anomaly pill renders even on a fresh install.
 Idempotent: an existing `*-demo` agent short-circuits the insert.
@@ -134,7 +134,7 @@ Idempotent: an existing `*-demo` agent short-circuits the insert.
 
 - `POST /api/v1/seed` — Bearer-auth; calls `insertSyntheticData`.
 - `POST /api/v1/admin/clear-seed` — Bearer-auth; hard-deletes every demo
-  row in dependency order. The future P2 `agentwatch admin clear-seed`
+  row in dependency order. The future P2 `linearwatch admin clear-seed`
   CLI command calls this endpoint.
 
 `packages/server/src/index.ts` registers both new routes on the existing
@@ -142,7 +142,7 @@ Fastify instance.
 
 14 integration tests cover all happy paths, the 409-on-second-bootstrap
 case, idempotency, and the `*-demo` filter. All 68 server tests still
-pass (`pnpm --filter @agentwatch/server test`).
+pass (`pnpm --filter @linearwatch/server test`).
 
 ### Task 2 — 7-step wizard UI + CLI placeholder (commit `929ad35`)
 
@@ -188,7 +188,7 @@ cookie helpers (`setSetupKeyCookie`, `getSetupKeyCookie`,
 steps 5-7 so the seed POST can authenticate without exposing the key in
 the URL.
 
-`packages/server/bin/agentwatch.js` (D-11 CLI placeholder) prints the
+`packages/server/bin/linearwatch.js` (D-11 CLI placeholder) prints the
 dashboard URL message and exits. The full CLI ships in Phase 2.
 
 ### Task 3 — Playwright e2e (commit `5a16ebe`)
@@ -202,7 +202,7 @@ dashboard URL message and exits. The full CLI ships in Phase 2.
    "Connect your Linear workspace." heading is visible.
 
 `packages/web/playwright.config.ts` builds + runs the Next.js production
-bundle (`pnpm --filter @agentwatch/web start`) so the test exercises the
+bundle (`pnpm --filter @linearwatch/web start`) so the test exercises the
 same artifact CI ships.
 
 CI job `e2e-setup-wizard` in `.github/workflows/ci.yml` brings up
@@ -213,17 +213,17 @@ Playwright.
 
 | Gate | Command | Result |
 | ---- | ------- | ------ |
-| Server typecheck | `pnpm --filter @agentwatch/server typecheck` | Clean |
-| Web typecheck | `pnpm --filter @agentwatch/web typecheck` | Clean |
+| Server typecheck | `pnpm --filter @linearwatch/server typecheck` | Clean |
+| Web typecheck | `pnpm --filter @linearwatch/web typecheck` | Clean |
 | Full repo lint | `pnpm lint` | 145 files, 0 errors |
-| Web build (Next.js standalone) | `pnpm --filter @agentwatch/web build` | 14 routes, all green |
-| Server tests (full suite) | `pnpm --filter @agentwatch/server test` | 68 pass |
-| Setup tests | `pnpm --filter @agentwatch/server test setup` | 9 pass |
-| Seed tests | `pnpm --filter @agentwatch/server test seed` | 5 pass |
-| Playwright e2e | `pnpm --filter @agentwatch/web exec playwright test` | 3 pass |
+| Web build (Next.js standalone) | `pnpm --filter @linearwatch/web build` | 14 routes, all green |
+| Server tests (full suite) | `pnpm --filter @linearwatch/server test` | 68 pass |
+| Setup tests | `pnpm --filter @linearwatch/server test setup` | 9 pass |
+| Seed tests | `pnpm --filter @linearwatch/server test seed` | 5 pass |
+| Playwright e2e | `pnpm --filter @linearwatch/web exec playwright test` | 3 pass |
 | Verbatim D-13 grep | `grep -c "Heads up: enabling Linear's AgentSession category" packages/web/src/app/setup/agentsession-warning/page.tsx packages/web/src/components/agentsession-warning-modal.tsx` | 1, 1 |
-| API key format | regex `/^agw_[A-Za-z0-9_-]+$/` (asserted in tests) | match |
-| CLI placeholder prints dashboard URL | `node packages/server/bin/agentwatch.js` | prints URL |
+| API key format | regex `/^lw_[A-Za-z0-9_-]+$/` (asserted in tests) | match |
+| CLI placeholder prints dashboard URL | `node packages/server/bin/linearwatch.js` | prints URL |
 
 Next.js build:
 
@@ -261,7 +261,7 @@ Route (app)                              Size  First Load JS
   copy + click-through gate; Escape disabled; backdrop click disabled.
   Verified by Playwright (3 tests).
 - **Pitfall 13 (Title leakage):** `synthetic.ts` calls
-  `hashTitle(rawTitle, workspaceSalt)` from `@agentwatch/shared` for
+  `hashTitle(rawTitle, workspaceSalt)` from `@linearwatch/shared` for
   every demo issue. The `issues` table has no `title` column; this is
   enforced at the type level via `TitleHash` brand. Test asserts
   `title_hash` matches `^[a-f0-9]{64}$`.
@@ -272,7 +272,7 @@ Per the plan's `<threat_model>`, all dispositions hold:
 
 - **T-09-01 (API key plaintext logged):** mitigated. The plaintext is
   returned in `POST /api/v1/setup/workspace`'s response body and stored
-  in an httpOnly `agw_setup_key` cookie scoped to `/`. Pino redact paths
+  in an httpOnly `lw_setup_key` cookie scoped to `/`. Pino redact paths
   cover `api_key_hash`. The cookie expires in 30 minutes and is cleared
   by the Done step. The plaintext is never logged anywhere.
 - **T-09-02 (Bootstrap takeover):** accepted (P1, single-tenant). The
@@ -326,7 +326,7 @@ Per the plan's `<threat_model>`, all dispositions hold:
 - **Found during:** Task 2 implementation — the wizard's seed step
   (step 6) needs Bearer auth against `/api/v1/seed`, but the plaintext
   key was generated in step 5 and the user has not yet set
-  `AGENTWATCH_INTERNAL_API_KEY` in env.
+  `LINEARWATCH_INTERNAL_API_KEY` in env.
 - **Fix:** Added `setSetupKeyCookie` / `getSetupKeyCookie` /
   `clearSetupKeyCookie` helpers in `lib/setup.ts`. Cookie is httpOnly,
   sameSite=lax, path=/, 30-min maxAge. Set in step 5's server action,
@@ -338,7 +338,7 @@ Per the plan's `<threat_model>`, all dispositions hold:
 - **Found during:** Task 2 — D-12 step order is GitHub PAT (4) BEFORE
   workspace creation (5), but the PAT endpoint requires Bearer auth.
 - **Fix:** Step 4 stashes the PAT in an httpOnly cookie
-  `agw_setup_github_pat`; step 5's server action reads the cookie after
+  `lw_setup_github_pat`; step 5's server action reads the cookie after
   `bootstrapWorkspace` returns, calls `saveGithubPat(pat, plaintextKey)`,
   and clears the cookie. Failure to save the PAT is silent (the user can
   re-enter it in Settings).
@@ -357,7 +357,7 @@ Per the plan's `<threat_model>`, all dispositions hold:
 **6. [Rule 3 — Blocking] Biome flags console.log in CLI placeholder**
 
 - **Found during:** Task 2 lint.
-- **Issue:** `packages/server/bin/agentwatch.js` is a CLI; it MUST print
+- **Issue:** `packages/server/bin/linearwatch.js` is a CLI; it MUST print
   to stdout. Project lint rule warns on console.log.
 - **Fix:** Three `// biome-ignore lint/suspicious/noConsoleLog: CLI
   placeholder must print to stdout` comments. The patterns are
@@ -410,14 +410,14 @@ minimal acknowledgement; no real OAuth credentials were needed.
   sign a per-session token and verify on callback (T-09-03 hardening).
 - **OAuth access token storage:** P1's
   `/api/v1/setup/linear-oauth/callback` only ack's; the token would be
-  needed for agentwatch-as-agent endpoints (P3). Not blocking P1.
+  needed for linearwatch-as-agent endpoints (P3). Not blocking P1.
 - **GitHub PAT encryption:** stored base64-encoded, not encrypted at
   rest. Single-tenant self-host is the threat model in P1; P2 may
   rotate to a sealed-secret column if needed.
 - **System-check rendering** (step 1) is static (always shows checks
   pass). A deeper /health probe + per-row failure rendering is over-
   engineering for P1; the server is up if /setup loads.
-- **`agentwatch admin clear-seed` CLI command:** P2 deliverable. The
+- **`linearwatch admin clear-seed` CLI command:** P2 deliverable. The
   server endpoint exists; the future CLI binary will call it.
 
 ## Threat Flags
@@ -433,7 +433,7 @@ minimal acknowledgement; no real OAuth credentials were needed.
 Plan 01.10 (CI gates) inherits:
 
 - The `e2e-setup-wizard` job in `.github/workflows/ci.yml`.
-- `pnpm --filter @agentwatch/web exec playwright test` as a permanent
+- `pnpm --filter @linearwatch/web exec playwright test` as a permanent
   pre-merge gate.
 - Lint/typecheck cleanliness across all new files.
 - The privacy guard from PRIV-03 still applies — `synthetic.ts` uses
@@ -451,7 +451,7 @@ Plan 01.10 (CI gates) inherits:
 FOUND: /home/bob/Linearwatch/packages/server/src/routes/api/v1/setup.ts
 FOUND: /home/bob/Linearwatch/packages/server/src/routes/api/v1/seed.ts
 FOUND: /home/bob/Linearwatch/packages/server/src/seed/synthetic.ts
-FOUND: /home/bob/Linearwatch/packages/server/bin/agentwatch.js
+FOUND: /home/bob/Linearwatch/packages/server/bin/linearwatch.js
 FOUND: /home/bob/Linearwatch/packages/server/test/integration/setup.test.ts
 FOUND: /home/bob/Linearwatch/packages/server/test/integration/seed.test.ts
 FOUND: /home/bob/Linearwatch/packages/db/migrations/0001_setup_github_pat.sql

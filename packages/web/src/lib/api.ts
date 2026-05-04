@@ -1,8 +1,8 @@
 /**
- * Server-only HTTP wrappers around the agentwatch internal API.
+ * Server-only HTTP wrappers around the linearwatch internal API.
  *
- * These functions read `AGENTWATCH_INTERNAL_URL` and
- * `AGENTWATCH_INTERNAL_API_KEY` from the server process env. They MUST
+ * These functions read `LINEARWATCH_INTERNAL_URL` and
+ * `LINEARWATCH_INTERNAL_API_KEY` from the server process env. They MUST
  * NOT be imported from client components — Next.js inlines non-NEXT_PUBLIC
  * env at build time only on the server side, so a client import would
  * resolve to `undefined` at runtime AND would be a T-08-01 violation if
@@ -31,7 +31,7 @@ interface SeedStatusResponse {
 function internalHeaders(): HeadersInit {
   return {
     'content-type': 'application/json',
-    authorization: `Bearer ${process.env.AGENTWATCH_INTERNAL_API_KEY ?? ''}`,
+    authorization: `Bearer ${process.env.LINEARWATCH_INTERNAL_API_KEY ?? ''}`,
   };
 }
 
@@ -43,7 +43,7 @@ export async function confirmAgent(
   agentId: string,
   linearAppUserId: string,
 ): Promise<ConfirmResponse> {
-  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/agents/${encodeURIComponent(agentId)}/confirm`;
+  const url = `${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/agents/${encodeURIComponent(agentId)}/confirm`;
   const r = await fetch(url, {
     method: 'POST',
     headers: internalHeaders(),
@@ -62,7 +62,7 @@ export async function confirmAgent(
  * WorkspaceWarningsBanner in the dashboard layout.
  */
 export async function fetchActiveWarnings(): Promise<WorkspaceWarning[]> {
-  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/workspace/warnings`;
+  const url = `${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/workspace/warnings`;
   const r = await fetch(url, {
     headers: internalHeaders(),
     cache: 'no-store',
@@ -80,7 +80,7 @@ export async function fetchActiveWarnings(): Promise<WorkspaceWarning[]> {
  * be resolved.
  */
 export async function hasWorkspace(): Promise<boolean> {
-  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/workspace/seed-status`;
+  const url = `${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/workspace/seed-status`;
   try {
     const r = await fetch(url, {
       headers: internalHeaders(),
@@ -99,7 +99,7 @@ export async function hasWorkspace(): Promise<boolean> {
  * in this plan; documented in the SUMMARY.
  */
 export async function fetchSeedStatus(): Promise<boolean> {
-  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/workspace/seed-status`;
+  const url = `${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/workspace/seed-status`;
   const r = await fetch(url, {
     headers: internalHeaders(),
     cache: 'no-store',

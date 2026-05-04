@@ -37,7 +37,7 @@ export function SettingsActions(): React.JSX.Element {
         <DialogHeader>
           <DialogTitle>Regenerate workspace API key?</DialogTitle>
           <DialogDescription>
-            This revokes <code className="font-mono">agw_…</code> immediately. Existing SDK and CLI
+            This revokes <code className="font-mono">lw_…</code> immediately. Existing SDK and CLI
             clients will return 401 until they're updated. There is no undo.
           </DialogDescription>
         </DialogHeader>

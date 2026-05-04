@@ -1,4 +1,4 @@
-# Requirements: agentwatch
+# Requirements: linearwatch
 
 **Defined:** 2026-05-03
 **Core Value:** Cross-agent attribution — for any issue, any team, any cycle, show which agent did what, what it cost, and whether the change held up.
@@ -59,13 +59,13 @@ Requirements for the v0.1 release (90-day plan). Each maps to a roadmap phase.
 
 ### CLI (`CLI`)
 
-- [ ] **CLI-01**: `agentwatch query "<DSL fragment>"` parses the constrained DSL and prints results as JSON or table
-- [ ] **CLI-02**: `agentwatch report cost --team ENG --window 14d` calls the query API and prints a formatted cost report
-- [ ] **CLI-03**: `agentwatch report reliability --agent cursor` prints success rate, revert rate, TTR
-- [ ] **CLI-04**: `agentwatch lineage LIN-1234` prints the per-issue agent timeline
-- [ ] **CLI-05**: `agentwatch tail` streams live agent activity events
-- [ ] **CLI-06**: `agentwatch rules test rules/cost-spike.yaml` validates a YAML rule against current data without firing notifications
-- [ ] **CLI-07**: `agentwatch setup` runs the same first-run flow as the dashboard wizard
+- [ ] **CLI-01**: `linearwatch query "<DSL fragment>"` parses the constrained DSL and prints results as JSON or table
+- [ ] **CLI-02**: `linearwatch report cost --team ENG --window 14d` calls the query API and prints a formatted cost report
+- [ ] **CLI-03**: `linearwatch report reliability --agent cursor` prints success rate, revert rate, TTR
+- [ ] **CLI-04**: `linearwatch lineage LIN-1234` prints the per-issue agent timeline
+- [ ] **CLI-05**: `linearwatch tail` streams live agent activity events
+- [ ] **CLI-06**: `linearwatch rules test rules/cost-spike.yaml` validates a YAML rule against current data without firing notifications
+- [ ] **CLI-07**: `linearwatch setup` runs the same first-run flow as the dashboard wizard
 - [ ] **CLI-08**: CLI is distributed as a single self-contained binary per platform (linux/x64, linux/arm64, darwin/arm64) via `bun build --compile` in CI
 - [ ] **CLI-09**: CLI uses the same `POST /api/v1/query` endpoint as the dashboard; no separate CLI-only API
 
@@ -81,8 +81,8 @@ Requirements for the v0.1 release (90-day plan). Each maps to a roadmap phase.
 
 ### SDK (`SDK`)
 
-- [ ] **SDK-01**: `@agentwatch/sdk` Node package emits `session_start`, `session_end`, `cost_recorded` events to `/api/v1/sdk/event`
-- [ ] **SDK-02**: `agentwatch` PyPI package emits the same three events with the same wire format
+- [ ] **SDK-01**: `@linearwatch/sdk` Node package emits `session_start`, `session_end`, `cost_recorded` events to `/api/v1/sdk/event`
+- [ ] **SDK-02**: `linearwatch` PyPI package emits the same three events with the same wire format
 - [ ] **SDK-03**: SDK accepts a workspace API key and a server URL; nothing else required to start emitting
 - [ ] **SDK-04**: SDK batches events with a configurable flush interval; falls back to disk buffer if endpoint is unreachable for > 60s
 - [ ] **SDK-05**: SDK ships ESM + CJS + `.d.ts` for Node; type-checked py3.10+ for Python
@@ -110,7 +110,7 @@ Requirements for the v0.1 release (90-day plan). Each maps to a roadmap phase.
 - [ ] **PRIV-01**: Issue titles hashed by default via a single `hashTitle()` utility; the `issues` ORM type has no raw `title: string` field — only `title_hash`
 - [ ] **PRIV-02**: Workspace setting can opt in to storing full titles; setting is per-workspace and explicit (not default)
 - [ ] **PRIV-03**: CI assertion: raw title strings never appear in any query API response when hashing is enabled
-- [ ] **PRIV-04**: `agentwatch agent purge <id>` CLI command soft-deletes an agent and propagates deletion to `cost_by_agent_daily` rollup via `REFRESH MATERIALIZED VIEW CONCURRENTLY`
+- [ ] **PRIV-04**: `linearwatch agent purge <id>` CLI command soft-deletes an agent and propagates deletion to `cost_by_agent_daily` rollup via `REFRESH MATERIALIZED VIEW CONCURRENTLY`
 
 ### Telemetry (`TELE`)
 
@@ -130,7 +130,7 @@ Requirements for the v0.1 release (90-day plan). Each maps to a roadmap phase.
 
 ### Launch (`LAUNCH`)
 
-- [ ] **LAUNCH-01**: Documentation site (docs.agentwatch.dev or equivalent) ships with quickstart, configuration reference, and SDK reference
+- [ ] **LAUNCH-01**: Documentation site (docs.linearwatch.dev or equivalent) ships with quickstart, configuration reference, and SDK reference
 - [ ] **LAUNCH-02**: `CONTRIBUTING.md` documents dev setup and conventions
 - [ ] **LAUNCH-03**: Discord server live with at least one community-contributed rule pack at launch
 - [ ] **LAUNCH-04**: Public benchmark blog post drafted from at least 14 days of opt-in telemetry data from 3+ design partners

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ServerDb } from '../../src/db';
 import authPlugin from '../../src/plugins/auth';
 
-const PLAINTEXT_KEY = 'agw_test_plaintext_key';
+const PLAINTEXT_KEY = 'lw_test_plaintext_key';
 const STORED_HASH = createHash('sha256').update(PLAINTEXT_KEY).digest('hex');
 
 function makeFakeDb(): ServerDb {

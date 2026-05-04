@@ -18,10 +18,10 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_confirm');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_confirm');
 
-const PLAINTEXT_KEY = 'agw_test_confirm_key_xyz';
+const PLAINTEXT_KEY = 'lw_test_confirm_key_xyz';
 const KEY_HASH = createHash('sha256').update(PLAINTEXT_KEY).digest('hex');
 const WS = '00000000-0000-4000-8000-000000000001';
 
@@ -62,8 +62,8 @@ describe.skipIf(!dbReachable)('POST /api/v1/agents/:id/confirm', () => {
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_confirm');
-    await admin.query('CREATE DATABASE agentwatch_confirm');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_confirm');
+    await admin.query('CREATE DATABASE linearwatch_confirm');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

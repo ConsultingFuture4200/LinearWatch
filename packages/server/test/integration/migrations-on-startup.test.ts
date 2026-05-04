@@ -29,7 +29,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  */
 const TEST_DB_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/agentwatch_startup';
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/linearwatch_startup';
 
 const DIST_PATH = resolve(__dirname, '..', '..', 'dist', 'index.js');
 const SRC_PATH = resolve(__dirname, '..', '..', 'src', 'index.ts');
@@ -67,8 +67,8 @@ describe.skipIf(!canReachAdmin)('migrations run at startup before listen [BLOCKI
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_startup');
-    await admin.query('CREATE DATABASE agentwatch_startup');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_startup');
+    await admin.query('CREATE DATABASE linearwatch_startup');
     await admin.end();
   }, 30_000);
 
@@ -85,7 +85,7 @@ describe.skipIf(!canReachAdmin)('migrations run at startup before listen [BLOCKI
         LINEAR_CLIENT_ID: 'cid',
         LINEAR_CLIENT_SECRET: 'sec',
         LINEAR_WEBHOOK_SECRET: 'whs',
-        AGENTWATCH_INTERNAL_API_KEY: 'integration-test-key-12345',
+        LINEARWATCH_INTERNAL_API_KEY: 'integration-test-key-12345',
         PORT: '8090',
         LOG_LEVEL: 'info',
       },
@@ -109,11 +109,11 @@ describe.skipIf(!canReachAdmin)('migrations run at startup before listen [BLOCKI
           const m = await fetch('http://127.0.0.1:8090/metrics');
           expect(m.headers.get('content-type')).toMatch(/text\/plain/);
           const text = await m.text();
-          expect(text).toContain('agentwatch_events_received_total');
-          expect(text).toContain('agentwatch_webhook_ack_seconds');
-          expect(text).toContain('agentwatch_jobs_queue_depth');
-          expect(text).toContain('agentwatch_identity_resolver_confidence');
-          expect(text).toContain('agentwatch_enrichment_lag_seconds');
+          expect(text).toContain('linearwatch_events_received_total');
+          expect(text).toContain('linearwatch_webhook_ack_seconds');
+          expect(text).toContain('linearwatch_jobs_queue_depth');
+          expect(text).toContain('linearwatch_identity_resolver_confidence');
+          expect(text).toContain('linearwatch_enrichment_lag_seconds');
           ready = true;
           break;
         }
@@ -137,7 +137,7 @@ describe.skipIf(!canReachAdmin)('migrations run at startup before listen [BLOCKI
         LINEAR_CLIENT_ID: 'cid',
         LINEAR_CLIENT_SECRET: 'sec',
         LINEAR_WEBHOOK_SECRET: 'whs',
-        AGENTWATCH_INTERNAL_API_KEY: 'integration-test-key-12345',
+        LINEARWATCH_INTERNAL_API_KEY: 'integration-test-key-12345',
         PORT: '8091',
         LOG_LEVEL: 'info',
       },

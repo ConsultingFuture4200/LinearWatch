@@ -1,6 +1,6 @@
 # Project Research Summary
 
-**Project:** agentwatch
+**Project:** linearwatch
 **Domain:** Self-hosted AI agent observability (Linear + GitHub + vendor API ingestion → Postgres → dashboard + CLI + SDKs)
 **Researched:** 2026-05-03
 **Confidence:** HIGH
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-agentwatch is APM for AI agents anchored on Linear — a self-hosted analytics layer that ingests Linear Agent Session webhooks, GitHub PR outcomes, and vendor cost APIs; resolves them into a unified cross-vendor agent identity; and exposes cost, reliability, and lineage views through a dashboard, CLI, and YAML-defined alert rules. The closest existing analogs are Langfuse (LLM cost tracking), Sleuth (DORA metrics), and Definity (data pipeline lineage) — none of which cross vendor boundaries or tie cost to issue outcomes. agentwatch's core IP is the identity resolver that stitches `linear_app_user_id`, `github_login`, and `vendor_session_id` into a single `agent_id`. Everything else is downstream of that.
+linearwatch is APM for AI agents anchored on Linear — a self-hosted analytics layer that ingests Linear Agent Session webhooks, GitHub PR outcomes, and vendor cost APIs; resolves them into a unified cross-vendor agent identity; and exposes cost, reliability, and lineage views through a dashboard, CLI, and YAML-defined alert rules. The closest existing analogs are Langfuse (LLM cost tracking), Sleuth (DORA metrics), and Definity (data pipeline lineage) — none of which cross vendor boundaries or tie cost to issue outcomes. linearwatch's core IP is the identity resolver that stitches `linear_app_user_id`, `github_login`, and `vendor_session_id` into a single `agent_id`. Everything else is downstream of that.
 
 The recommended approach is a TypeScript-throughout monorepo: Fastify for the webhook receiver and query API, Drizzle ORM with a star schema on Postgres 16, Graphile Worker for background job scheduling (enrichment, alerts, telemetry), and Next.js 15 App Router for the dashboard. The CLI is built with commander and compiled to a self-contained binary via Bun. No Redis, no Kafka, no TSDB — Postgres only. Two containers in the default compose file (`web`, `worker`, `postgres`) achieves the `docker compose up` in 5 minutes constraint. This is the Langfuse v2 architecture pattern before they split at scale; it is the right call for a 90-day solo build targeting sub-100k sessions/month.
 
@@ -21,7 +21,7 @@ The dominant risks concentrate in three areas. First, correctness: without idemp
 
 ### Recommended Stack
 
-TypeScript throughout is the correct call: the Node SDK is a first-class deliverable, and a split-language repo (Go server + Node SDK) doubles CI pipelines, contributor onboarding, and identity resolver logic for no performance gain at agentwatch's scale. Fastify's p99 of 15-30ms on the raw HTTP path leaves 10x headroom under the 200ms webhook ack SLA. Drizzle's `sql` escape hatch is essential for the rolling-window analytics queries the dashboard needs; Prisma's migration UX and lack of clean window-function access makes it the wrong choice here. Bun `--compile` solves the single-binary CLI requirement without leaving the TypeScript ecosystem.
+TypeScript throughout is the correct call: the Node SDK is a first-class deliverable, and a split-language repo (Go server + Node SDK) doubles CI pipelines, contributor onboarding, and identity resolver logic for no performance gain at linearwatch's scale. Fastify's p99 of 15-30ms on the raw HTTP path leaves 10x headroom under the 200ms webhook ack SLA. Drizzle's `sql` escape hatch is essential for the rolling-window analytics queries the dashboard needs; Prisma's migration UX and lack of clean window-function access makes it the wrong choice here. Bun `--compile` solves the single-binary CLI requirement without leaving the TypeScript ecosystem.
 
 **Core technologies:**
 
@@ -54,13 +54,13 @@ Self-hosters in this space (Plausible, Langfuse, PostHog self-hosted) have forme
 - Issue title hashing by default — privacy default must ship before public launch
 - Prometheus `/metrics` endpoint
 - Opt-in anonymized telemetry (`TELEMETRY_OPT_IN=true` env var, off by default)
-- `agentwatch setup` first-run wizard
+- `linearwatch setup` first-run wizard
 
 **Should-have (differentiators):**
 
 - Cross-source identity resolver (Linear + GitHub + vendor) — the core IP; no other tool ships it
 - Model-tier cost breakdown (frontier/mid/small) — more stable than per-model tracking across vendor version changes
-- `agentwatch lineage LIN-1234` CLI command — one command, every agent that touched an issue
+- `linearwatch lineage LIN-1234` CLI command — one command, every agent that touched an issue
 - Two default rule packs shipped in-box — lowers time-to-first-alert from hours to minutes
 
 **Defer to v2+:**
@@ -135,7 +135,7 @@ The three PRD phases (Foundation 1-21, Enrichment 22-60, Launch 61-90) map clean
 - Identity resolver v0: Linear-only, confidence scoring, `identity_mappings` state machine
 - Query API skeleton: 2-3 metrics, `agent` + `team` dimensions
 - Cost dashboard view consuming query API (not direct DB)
-- `agentwatch setup` wizard with explicit warning about AgentSession UI visibility toggle
+- `linearwatch setup` wizard with explicit warning about AgentSession UI visibility toggle
 - Issue title hashing enforced at ORM type level
 
 **CRITICAL pitfalls to eliminate in P1:** all 8 listed above (deduplication, async-only handler, SHA-256 enforcement, title hashing completeness, debug log discipline, shared-app detection, telemetry guard pattern established early, partitioned schema).
@@ -203,7 +203,7 @@ The three PRD phases (Foundation 1-21, Enrichment 22-60, Launch 61-90) map clean
 | **Idempotency key composition** | ARCHITECTURE (idempotency strategy) + PITFALLS (duplicate delivery) | Linear: `Linear-Delivery` header; GitHub: `X-GitHub-Delivery` UUID; SDK: caller-supplied key or `sha256(session_id + event_type + timestamp_bucket)`; unique constraint in DB, not application-layer dedup |
 | **Telemetry opt-in placement** | FEATURES (opt-in telemetry) + PITFALLS (flag checked too late) + ARCHITECTURE (telemetry job) | `TELEMETRY_OPT_IN` is the first conditional in the Graphile Worker `emit_telemetry` task; if false, return before any DB read; integration test validates zero-call behavior |
 | **Query API constraint enforcement** | ARCHITECTURE (constrained DSL) + FEATURES (anti-feature: custom SQL) + STACK (Zod) | `MetricName` and `DimensionName` are Zod enums; each metric maps to a named SQL function in `src/query/metrics.ts`; unknown combinations return 400 with clear error |
-| **Sample data / first-install UX** | FEATURES (self-hoster empty-dashboard problem) + ARCHITECTURE (replay model) | Ship a `--seed` flag on `agentwatch setup` that inserts synthetic sessions; validate hypothesis with P1 design partners before investing in a full demo workspace |
+| **Sample data / first-install UX** | FEATURES (self-hoster empty-dashboard problem) + ARCHITECTURE (replay model) | Ship a `--seed` flag on `linearwatch setup` that inserts synthetic sessions; validate hypothesis with P1 design partners before investing in a full demo workspace |
 
 ### Open Questions for Design Partners
 
@@ -220,7 +220,7 @@ These require real data — research cannot resolve them:
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All core choices verified against official docs; version compatibility confirmed; Node vs Go decision is definitive at agentwatch's scale |
+| Stack | HIGH | All core choices verified against official docs; version compatibility confirmed; Node vs Go decision is definitive at linearwatch's scale |
 | Features | MEDIUM-HIGH | Adjacent spaces well-documented; agent-specific patterns extrapolated; confidence threshold tuning needs real-world validation |
 | Architecture | HIGH | Design questions resolved against documented comparable systems (Langfuse, Umami, Graphile Worker); idempotency and schema strategies are proven patterns |
 | Pitfalls | HIGH (webhook/Postgres) / MEDIUM (identity resolver) / LOW (vendor APIs) | Webhook and Postgres pitfalls verified against official docs and community incidents; vendor API stability is a known unknown |

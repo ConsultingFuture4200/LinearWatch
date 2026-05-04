@@ -29,13 +29,13 @@ interface MinimalFastify {
  * call `client.register.resetMetrics()`.
  */
 export const eventsReceived = new client.Counter({
-  name: 'agentwatch_events_received_total',
+  name: 'linearwatch_events_received_total',
   help: 'Number of webhook/SDK events received',
   labelNames: ['source'] as const,
 });
 
 export const webhookAckSeconds = new client.Histogram({
-  name: 'agentwatch_webhook_ack_seconds',
+  name: 'linearwatch_webhook_ack_seconds',
   help: 'Time to ack a webhook (HMAC verify + INSERT + 200)',
   labelNames: ['source'] as const,
   // Buckets span 5ms to 2s so the 200ms SLA shows clearly.
@@ -43,19 +43,19 @@ export const webhookAckSeconds = new client.Histogram({
 });
 
 export const jobsQueueDepth = new client.Gauge({
-  name: 'agentwatch_jobs_queue_depth',
+  name: 'linearwatch_jobs_queue_depth',
   help: 'Pending Graphile Worker jobs by task identifier',
   labelNames: ['job_name'] as const,
 });
 
 export const resolverConfidenceHistogram = new client.Histogram({
-  name: 'agentwatch_identity_resolver_confidence',
+  name: 'linearwatch_identity_resolver_confidence',
   help: 'Distribution of identity resolver confidence scores',
   buckets: [0, 0.25, 0.5, 0.75, 0.8, 0.9, 1.0],
 });
 
 export const enrichmentLagSeconds = new client.Gauge({
-  name: 'agentwatch_enrichment_lag_seconds',
+  name: 'linearwatch_enrichment_lag_seconds',
   help: 'Lag between source event and enrichment completion (P1 stub: 0)',
   labelNames: ['source'] as const,
 });

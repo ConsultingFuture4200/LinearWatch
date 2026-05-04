@@ -4,7 +4,7 @@ plan: 08
 subsystem: foundation
 tags: [dashboard, nextjs-app-router, shadcn, ui-spec, dash-01, dash-04, api-07]
 requires:
-  - "@agentwatch/shared QueryRequest + QueryResponse from plan 01.03"
+  - "@linearwatch/shared QueryRequest + QueryResponse from plan 01.03"
   - "POST /api/v1/query, /api/v1/sdk/event, /api/v1/agents/:id/confirm from plan 01.07"
   - "agents + workspace_warnings schema from plan 01.02"
 provides:
@@ -35,7 +35,7 @@ tech-stack:
     - "radix-ui umbrella + sonner (Radix primitives + toaster)"
   patterns:
     - "Single typed query client (lib/query.ts) is the SOLE path from React to data — API-07 lint guard verifies no DB driver imports anywhere under packages/web/src/"
-    - "Server Component fetch via internal docker-network URL (AGENTWATCH_INTERNAL_URL) so the Bearer key never reaches the browser"
+    - "Server Component fetch via internal docker-network URL (LINEARWATCH_INTERNAL_URL) so the Bearer key never reaches the browser"
     - "Server Actions ('use server') wrap server-only HTTP calls (confirmAgentAction) so client components can await them — preserves T-08-01 secret isolation"
     - "URL-stateful filters via router.replace + Server Component re-render — no client-side state library needed"
     - "Banners server-rendered from a small dedicated workspace endpoint pair (warnings + seed-status) — no client flash"
@@ -71,7 +71,7 @@ key-files:
     - "packages/web/src/components/ui/{17 shadcn files}"
     - "packages/server/src/routes/api/v1/workspace.ts"
   modified:
-    - "packages/web/package.json (added shadcn deps, @agentwatch/shared workspace dep)"
+    - "packages/web/package.json (added shadcn deps, @linearwatch/shared workspace dep)"
     - "packages/web/tsconfig.json (added @/* path alias, Next-managed allowJs + .next/types include)"
     - "packages/web/src/app/layout.tsx (next/font, ThemeProvider, Toaster, TooltipProvider)"
     - "packages/web/src/app/page.tsx (now redirects to /cost)"
@@ -88,7 +88,7 @@ decisions:
   - "Identity side panel uses Radix Dialog with modal={false} per UI-SPEC §Keyboard & screen-reader contract — the table behind stays scrollable so users can batch-confirm 3-5 rows on first install (D-17). Side panel positions absolute right-0/top-14 with the spec'd 480px width and h-[calc(100vh-3.5rem)] height"
   - "Unconfirmed badge wraps shadcn Badge in a button (clickable) instead of a plain Badge — the UI-SPEC says clicking opens the side panel, which requires a focusable element with proper aria-label. The literal 'Unconfirmed' text is preserved so the affordance doesn't depend on color alone"
   - "Filters bar renders empty team/cycle dropdowns (only 'All teams' / 'All cycles' options) in P1. A dimension-list metric for populating the dropdowns is deferred to P2 — adding it would require either a new query API surface or extending QueryResponse to include `available_dimension_values`. Plan 01.07 froze the API contract; this is the right deferral"
-  - "Server Action `confirmAgentAction` in cost/actions.ts wraps the server-only `confirmAgent` from lib/api.ts so the IdentitySidePanel client component can `await` it without leaking AGENTWATCH_INTERNAL_API_KEY. Next.js handles the RPC; the env var stays server-side"
+  - "Server Action `confirmAgentAction` in cost/actions.ts wraps the server-only `confirmAgent` from lib/api.ts so the IdentitySidePanel client component can `await` it without leaking LINEARWATCH_INTERNAL_API_KEY. Next.js handles the RPC; the env var stays server-side"
   - "Added two NEW server endpoints (GET /api/v1/workspace/warnings + /api/v1/workspace/seed-status) per Rule 2 (critical functionality). The plan called for `fetchActiveWarnings()` but plan 01.07 didn't expose either endpoint — adding them here keeps the dashboard layout server-rendered without flicker. Both are Bearer-auth and read-only"
   - "P2 stub pages link to `/docs/roadmap` per UI-SPEC; the docs route itself is a P3 deliverable, so the link 404s until P3. Same treatment as the troubleshooting link in EmptyState. Surfacing the link in P1 means P3 only has to add the route"
   - "Settings page renders the privacy toggle as a static read-only display in P1 (the actual server endpoint to flip workspaces.store_titles_plain ships with the wizard PATCH endpoint in P2). The destructive Regenerate API key modal is fully wired but the click handler is a no-op pending the P2 rotate-key endpoint — the UI flow is P1, the endpoint call is P2"
@@ -104,7 +104,7 @@ metrics:
 
 # Phase 1 Plan 08: Cost Dashboard Summary
 
-The agentwatch dashboard is now real. Visiting `/cost` in a logged-in
+The linearwatch dashboard is now real. Visiting `/cost` in a logged-in
 container renders the cost-by-agent stacked bar chart and agents table
 sourced exclusively through `POST /api/v1/query` — no React component
 imports `pg` or `drizzle-orm` (API-07 enforced by grep). The identity
@@ -142,12 +142,12 @@ Components installed (UI-SPEC §Component Inventory): `button`, `card`,
 
 ```ts
 export async function fetchQuery(req: QueryRequest): Promise<QueryResponse> {
-  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/query`;
+  const url = `${process.env.LINEARWATCH_INTERNAL_URL}/api/v1/query`;
   const r = await fetch(url, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      authorization: `Bearer ${process.env.AGENTWATCH_INTERNAL_API_KEY ?? ''}`,
+      authorization: `Bearer ${process.env.LINEARWATCH_INTERNAL_API_KEY ?? ''}`,
     },
     body: JSON.stringify(req),
     cache: 'no-store',
@@ -162,7 +162,7 @@ This is the single typed client (DASH-01, API-07). The CI grep guard
 
 `packages/web/src/lib/api.ts` exports three server-only functions:
 `confirmAgent`, `fetchActiveWarnings`, `fetchSeedStatus`. Each reads
-`AGENTWATCH_INTERNAL_API_KEY` from process env — not prefixed
+`LINEARWATCH_INTERNAL_API_KEY` from process env — not prefixed
 `NEXT_PUBLIC_`, so Next.js does NOT inline it into the client bundle
 (T-08-01 mitigation).
 
@@ -180,12 +180,12 @@ App shell:
 - `src/app/layout.tsx` — Inter + JetBrains Mono via `next/font/google`
   (variable fonts, no FOUC). `ThemeProvider` (next-themes,
   `attribute="class"`, `defaultTheme="system"`,
-  `storageKey="agentwatch-theme"`). `TooltipProvider` wraps everything
+  `storageKey="linearwatch-theme"`). `TooltipProvider` wraps everything
   so per-tooltip mounts don't have to re-instantiate context.
 - `src/app/page.tsx` — root path redirects to `/cost` (Cost is the
   active P1 tab per UI-SPEC).
 - `src/app/(dashboard)/layout.tsx` — top nav (lowercase mono
-  `agentwatch`, NavTabs in the center, Settings + ThemeToggle on the
+  `linearwatch`, NavTabs in the center, Settings + ThemeToggle on the
   right). Banners are server-rendered from `fetchActiveWarnings()` and
   `fetchSeedStatus()`.
 
@@ -263,15 +263,15 @@ state via `router.replace(?...)`.
 
 | Gate                                          | Command                                                            | Result                                |
 | --------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------- |
-| Web typecheck                                 | `pnpm --filter @agentwatch/web typecheck`                          | Clean                                 |
-| Server typecheck                              | `pnpm --filter @agentwatch/server typecheck`                       | Clean                                 |
+| Web typecheck                                 | `pnpm --filter @linearwatch/web typecheck`                          | Clean                                 |
+| Server typecheck                              | `pnpm --filter @linearwatch/server typecheck`                       | Clean                                 |
 | Full repo lint                                | `pnpm lint`                                                        | 122 files, 0 errors                   |
-| Web build (Next.js standalone)                | `pnpm --filter @agentwatch/web build`                              | 6 routes, all green                   |
+| Web build (Next.js standalone)                | `pnpm --filter @linearwatch/web build`                              | 6 routes, all green                   |
 | OBS-04 grep guard                             | `bash scripts/check-no-req-body.sh`                                | OK                                    |
 | **API-07 enforcement (load-bearing)**         | `grep -rE "from 'pg'\|from 'drizzle-orm'" packages/web/src/`       | **NO matches** (exit 1)               |
 | Acceptance: cost page calls fetchQuery        | `grep -n "metric: 'cost_by_agent'" packages/web/src/app/(dashboard)/cost/page.tsx` | match line 53      |
 | Acceptance: side panel uses modal={false}     | `grep -n "modal={false}" packages/web/src/components/identity-side-panel.tsx` | match line 61          |
-| Acceptance: lib/query.ts uses internal URL    | `grep -n "AGENTWATCH_INTERNAL_URL" packages/web/src/lib/query.ts`  | match                                 |
+| Acceptance: lib/query.ts uses internal URL    | `grep -n "LINEARWATCH_INTERNAL_URL" packages/web/src/lib/query.ts`  | match                                 |
 | Acceptance: shadcn components.json present    | `cat packages/web/components.json \| grep -E 'new-york\|zinc'`     | both present                          |
 | Acceptance: 17 ui/ components installed       | `ls packages/web/src/components/ui/ \| wc -l`                      | 17                                    |
 
@@ -306,7 +306,7 @@ Route (app)                  Size     First Load JS
 - **Threat T-08-01 (Internal API key reaches browser):** All
   `fetchQuery` / `confirmAgent` / `fetchActiveWarnings` /
   `fetchSeedStatus` calls run inside Server Components or Server
-  Actions. `AGENTWATCH_INTERNAL_API_KEY` is read server-side only;
+  Actions. `LINEARWATCH_INTERNAL_API_KEY` is read server-side only;
   Next.js does NOT inline non-`NEXT_PUBLIC_` env vars into client
   bundles.
 - **Threat T-08-02 (Component imports DB driver):** API-07 grep
@@ -318,7 +318,7 @@ Route (app)                  Size     First Load JS
 
 **1. [Rule 3 — Blocking] shadcn-vendored UI components incompatible with `exactOptionalPropertyTypes: true`**
 
-- **Found during:** Task 2 typecheck (`pnpm --filter @agentwatch/web typecheck`).
+- **Found during:** Task 2 typecheck (`pnpm --filter @linearwatch/web typecheck`).
 - **Issue:** `components/ui/sonner.tsx` and `components/ui/dropdown-menu.tsx`
   ship with property types that include `undefined` and pass them
   through to Radix primitives that don't accept `undefined`. The
@@ -374,7 +374,7 @@ Route (app)                  Size     First Load JS
 **5. [Rule 3 — Blocking] `CostChartRow.count?: number` rejected under `exactOptionalPropertyTypes`**
 
 - **Found during:** Task 3 typecheck.
-- **Issue:** The QueryResponse rows from `@agentwatch/shared` have
+- **Issue:** The QueryResponse rows from `@linearwatch/shared` have
   explicit `number | undefined` for optional fields; assigning them to
   `count?: number` failed under `exactOptionalPropertyTypes: true`.
 - **Fix:** Widened `CostChartRow` to `count?: number | undefined` and
@@ -430,8 +430,8 @@ through T-08-06 dispositions hold:
 
 - **T-08-01 (Internal key reaches browser):** mitigated — all internal
   fetches happen in Server Components / Server Actions; env var read
-  is server-side only; no `NEXT_PUBLIC_AGENTWATCH_INTERNAL_API_KEY`
-  exists in the codebase (`grep -r NEXT_PUBLIC_AGENTWATCH_INTERNAL packages/web` returns nothing).
+  is server-side only; no `NEXT_PUBLIC_LINEARWATCH_INTERNAL_API_KEY`
+  exists in the codebase (`grep -r NEXT_PUBLIC_LINEARWATCH_INTERNAL packages/web` returns nothing).
 - **T-08-02 (DB driver import):** mitigated — `grep -rE "from 'pg'|from 'drizzle-orm'" packages/web/src/`
   returns empty; Plan 01.10 makes this permanent in CI.
 - **T-08-03 (Title leakage):** mitigated — query API responses don't
@@ -466,7 +466,7 @@ queries scope by `workspace_id = req.workspaceId`.
   shown as `—` in P1 because the query API metric doesn't surface those
   fields. P2 metric extension populates them.
 - **Empty state webhook URL host** — falls back to a placeholder
-  `https://your-host.example` when `AGENTWATCH_PUBLIC_URL` env var is
+  `https://your-host.example` when `LINEARWATCH_PUBLIC_URL` env var is
   unset. Plan 01.09 wizard sets the env var.
 - **`/docs/roadmap` and `/docs/troubleshooting` links** — 404 until
   P3 ships the docs site.
@@ -486,15 +486,15 @@ Plan 01.09 (setup wizard + seed) consumes:
 - The `synthetic-data-banner` automatically appears on `/cost` once
   any agent name ends in `-demo` (the wizard's seed data uses
   `cursor-demo`, `devin-demo`, `internal-bot-demo` per D-07).
-- The settings page reads `AGENTWATCH_WORKSPACE_NAME` env var — the
+- The settings page reads `LINEARWATCH_WORKSPACE_NAME` env var — the
   wizard writes it to `.env` after the workspace name step.
 
 Plan 01.10 (CI gates) makes permanent:
 
 - `grep -rE "from 'pg'|from 'drizzle-orm'" packages/web/src/` must be
   empty (API-07).
-- `pnpm --filter @agentwatch/web build` must succeed.
-- `pnpm --filter @agentwatch/web typecheck` must succeed under
+- `pnpm --filter @linearwatch/web build` must succeed.
+- `pnpm --filter @linearwatch/web typecheck` must succeed under
   `exactOptionalPropertyTypes: true`.
 
 ## Commits

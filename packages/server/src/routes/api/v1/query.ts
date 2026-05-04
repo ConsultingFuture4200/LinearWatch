@@ -1,4 +1,4 @@
-import { QueryRequest } from '@agentwatch/shared';
+import { QueryRequest } from '@linearwatch/shared';
 import type { FastifyInstance } from 'fastify';
 import { dispatchQuery } from '../../../query/dispatcher.js';
 

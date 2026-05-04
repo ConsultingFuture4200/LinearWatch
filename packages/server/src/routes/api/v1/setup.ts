@@ -48,7 +48,7 @@ interface CountRow {
 }
 
 function generateApiKey(): { plaintext: string; hash: string } {
-  const plaintext = `agw_${randomBytes(32).toString('base64url')}`;
+  const plaintext = `lw_${randomBytes(32).toString('base64url')}`;
   const hash = createHash('sha256').update(plaintext).digest('hex');
   return { plaintext, hash };
 }
@@ -89,7 +89,7 @@ export default async function setupRoutes(fastify: FastifyInstance): Promise<voi
   /**
    * POST /api/v1/setup/workspace — bootstrap-only.
    *
-   * Generates `agw_` + 32 base64url bytes for the plaintext key and stores
+   * Generates `lw_` + 32 base64url bytes for the plaintext key and stores
    * sha256(plaintext) in `api_key_hash`. The plaintext is returned ONCE.
    * `workspace_salt` is generated here per D-27.
    */
@@ -121,7 +121,7 @@ export default async function setupRoutes(fastify: FastifyInstance): Promise<voi
    * Linear webhooks use HMAC, not OAuth, so the access token is not
    * required for any P1 background job. P2/P3 will exchange the code
    * for a token via Linear's `/oauth/token` endpoint and persist it
-   * for the agentwatch-as-agent endpoints.
+   * for the linearwatch-as-agent endpoints.
    */
   fastify.post('/api/v1/setup/linear-oauth/callback', async (req, reply) => {
     const parsed = OAuthCallbackBody.safeParse(req.body); // allow-req-body: Zod-validated parse boundary

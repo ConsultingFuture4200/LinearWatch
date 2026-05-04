@@ -1,4 +1,4 @@
-import type { DimensionName, Filter, QueryRequest, QueryRow } from '@agentwatch/shared';
+import type { DimensionName, Filter, QueryRequest, QueryRow } from '@linearwatch/shared';
 import { type SQL, sql } from 'drizzle-orm';
 import type { ServerDb } from '../../db.js';
 import { resolveWindow } from '../window.js';

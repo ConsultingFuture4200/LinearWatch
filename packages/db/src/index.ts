@@ -1,5 +1,5 @@
 /**
- * `@agentwatch/db` package entry.
+ * `@linearwatch/db` package entry.
  *
  * Exports:
  * - `schema` — namespace import of every Phase-1 table for query construction.

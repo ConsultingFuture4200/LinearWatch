@@ -14,7 +14,7 @@ import { redirect } from 'next/navigation';
  * workspace API key. This avoids requiring the user to refresh / set env
  * vars mid-wizard.
  */
-const PAT_COOKIE = 'agw_setup_github_pat';
+const PAT_COOKIE = 'lw_setup_github_pat';
 const HEADING = 'Add a GitHub Personal Access Token (optional).';
 const BODY =
   'Phase 2 uses this token to enrich agent sessions with PR merge/revert outcomes — that\'s how the "Cost / closed issue" column gets populated. You can skip this now and add it later from Settings.';

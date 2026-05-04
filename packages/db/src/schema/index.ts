@@ -1,5 +1,5 @@
 /**
- * `@agentwatch/db` schema barrel.
+ * `@linearwatch/db` schema barrel.
  *
  * Re-exports every Phase-1 table definition. Server, worker, and web packages
  * import from here. The drizzle-kit config (`drizzle.config.ts`) points at this

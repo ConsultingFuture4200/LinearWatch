@@ -17,7 +17,7 @@ export default defineConfig({
   schema: './src/schema/index.ts',
   out: './migrations',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://localhost/agentwatch',
+    url: process.env.DATABASE_URL ?? 'postgres://localhost/linearwatch',
   },
   verbose: true,
   strict: true,

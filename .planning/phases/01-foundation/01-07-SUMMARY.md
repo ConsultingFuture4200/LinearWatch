@@ -4,7 +4,7 @@ plan: 07
 subsystem: foundation
 tags: [query-api, sdk-endpoint, identity-confirm, dispatcher, dimension-enum, sql-injection-prevention]
 requires:
-  - "@agentwatch/shared QueryRequest + SdkEventBody from plan 01.03"
+  - "@linearwatch/shared QueryRequest + SdkEventBody from plan 01.03"
   - "Fastify bootstrap + authBearer plugin from plan 01.04"
   - "events.raw_event partitioned table + identity_mappings + agents schema from plan 01.02"
   - "logWebhookReceipt + webhookAckSeconds metrics from plan 01.04 (reused for SDK source label)"
@@ -19,7 +19,7 @@ provides:
 affects:
   - "Plan 01.08 (cost dashboard) calls POST /api/v1/query exclusively for chart data and table data"
   - "Plan 01.08 dashboard side panel calls POST /api/v1/agents/:id/confirm on row confirmation (D-17)"
-  - "Future P2 SDK packages (@agentwatch/sdk Node, agentwatch PyPI) target POST /api/v1/sdk/event"
+  - "Future P2 SDK packages (@linearwatch/sdk Node, linearwatch PyPI) target POST /api/v1/sdk/event"
   - "Future P2 metrics (DASH-02 reliability, DASH-03 lineage) extend MetricName + add metric files"
 tech-stack:
   added: []
@@ -50,7 +50,7 @@ decisions:
   - "SDK endpoint reuses Plan 01.05's `WITH existing AS (...) ... NOT EXISTS (...) ... ON CONFLICT DO NOTHING` CTE pattern verbatim. The unique constraint `(source, upstream_id, received_at)` requires `received_at` because the table is partitioned on it (Postgres rule), so a plain ON CONFLICT only catches microsecond-precision collisions. The CTE is the load-bearing dedup; ON CONFLICT is defense-in-depth."
   - "Confirm endpoint returns `confirmed_count` (the number of identity_mappings rows updated) instead of 200/204. The dashboard can show a no-op message when the operation matched zero rows (already confirmed, or wrong linear_app_user_id). This is a deliberate choice to make the side panel UX honest about what happened."
   - "404 on soft-deleted agent (rather than 409 or silent success). The dashboard should never reach this state — the side panel only opens for visible agents — but a stale tab + DELETE race is defensible. 404 matches the agent-not-found case and avoids inventing a third status code for an edge case."
-  - "Filter `op: 'in'` accepts either a single string or an array — Zod's `z.union([z.string(), z.array(z.string())])` (already in @agentwatch/shared from 01.03). The metric implementation normalises with `Array.isArray(f.value) ? f.value : [f.value]` so the SQL `= ANY($N::uuid[])` form works in either case."
+  - "Filter `op: 'in'` accepts either a single string or an array — Zod's `z.union([z.string(), z.array(z.string())])` (already in @linearwatch/shared from 01.03). The metric implementation normalises with `Array.isArray(f.value) ? f.value : [f.value]` so the SQL `= ANY($N::uuid[])` form works in either case."
 metrics:
   duration_seconds: 471
   duration_human: "~8 minutes"
@@ -213,10 +213,10 @@ SELECT id FROM inserted UNION ALL SELECT id FROM existing LIMIT 1
 |-------------------------------------------|--------------------------------------------------------------------|-----------------------|
 | Typecheck (all packages)                  | `pnpm typecheck`                                                   | Clean (4/4)           |
 | Lint (full repo)                          | `pnpm lint`                                                        | 78 files, 0 errors    |
-| Server tests (full suite)                 | `DATABASE_URL_TEST=… pnpm --filter @agentwatch/server test`        | 54/54 pass            |
-| Query API integration                     | `… pnpm --filter @agentwatch/server test -- query-api`             | 10/10 pass            |
-| SDK event integration                     | `… pnpm --filter @agentwatch/server test -- sdk-event`             | 5/5 pass              |
-| Agents confirm integration                | `… pnpm --filter @agentwatch/server test -- agents-confirm`        | 6/6 pass              |
+| Server tests (full suite)                 | `DATABASE_URL_TEST=… pnpm --filter @linearwatch/server test`        | 54/54 pass            |
+| Query API integration                     | `… pnpm --filter @linearwatch/server test -- query-api`             | 10/10 pass            |
+| SDK event integration                     | `… pnpm --filter @linearwatch/server test -- sdk-event`             | 5/5 pass              |
+| Agents confirm integration                | `… pnpm --filter @linearwatch/server test -- agents-confirm`        | 6/6 pass              |
 | OBS-04 grep guard                         | `bash scripts/check-no-req-body.sh`                                | OK                    |
 | Acceptance grep #1 (Record<MetricName>)   | `grep -n "Record<MetricName" packages/server/src/query/dispatcher.ts` | line 23            |
 | Acceptance grep #2 (no string concat from req)| `grep -nE "\\+\\s*req\\." packages/server/src/query/metrics/cost-by-agent.ts` | NO matches |
@@ -416,7 +416,7 @@ await fetch(`http://server:8080/api/v1/agents/${agentId}/confirm`, {
 });
 ```
 
-Future P2 SDK packages (`@agentwatch/sdk` Node, `agentwatch` PyPI) post
+Future P2 SDK packages (`@linearwatch/sdk` Node, `linearwatch` PyPI) post
 to `/api/v1/sdk/event` with the same `SdkEventBody` shape — the contract
 is now stable.
 

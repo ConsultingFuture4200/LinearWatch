@@ -1,5 +1,5 @@
 {
-  "name": "@agentwatch/server",
+  "name": "@linearwatch/server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "agentwatch": "./bin/agentwatch.js"
+    "linearwatch": "./bin/linearwatch.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -24,8 +24,8 @@
     "bench:webhook-ack": "tsx test/perf/webhook-ack.bench.ts"
   },
   "dependencies": {
-    "@agentwatch/db": "workspace:^",
-    "@agentwatch/shared": "workspace:^",
+    "@linearwatch/db": "workspace:^",
+    "@linearwatch/shared": "workspace:^",
     "drizzle-orm": "0.45.2",
     "fastify": "5.8.5",
     "fastify-plugin": "5.0.1",

@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: agentwatch
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentwatch_dev_password}
-      POSTGRES_DB: agentwatch
+      POSTGRES_USER: linearwatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-linearwatch_dev_password}
+      POSTGRES_DB: linearwatch
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agentwatch"]
+      test: ["CMD-SHELL", "pg_isready -U linearwatch"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     environment:
-      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD:-agentwatch_dev_password}@postgres:5432/agentwatch
+      DATABASE_URL: postgres://linearwatch:${POSTGRES_PASSWORD:-linearwatch_dev_password}@postgres:5432/linearwatch
       LINEAR_CLIENT_ID: ${LINEAR_CLIENT_ID}
       LINEAR_CLIENT_SECRET: ${LINEAR_CLIENT_SECRET}
       LINEAR_WEBHOOK_SECRET: ${LINEAR_WEBHOOK_SECRET}
@@ -29,7 +29,7 @@ services:
       LOG_LEVEL: info
       TELEMETRY_OPT_IN: "false"
       PORT: "8080"
-      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+      LINEARWATCH_INTERNAL_API_KEY: ${LINEARWATCH_INTERNAL_API_KEY}
     command: ["node", "/app/packages/server/dist/index.js"]
     ports:
       - "8080:8080"
@@ -42,11 +42,11 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     environment:
-      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD:-agentwatch_dev_password}@postgres:5432/agentwatch
+      DATABASE_URL: postgres://linearwatch:${POSTGRES_PASSWORD:-linearwatch_dev_password}@postgres:5432/linearwatch
       LINEAR_CLIENT_ID: ${LINEAR_CLIENT_ID}
       LINEAR_CLIENT_SECRET: ${LINEAR_CLIENT_SECRET}
       LINEAR_WEBHOOK_SECRET: ${LINEAR_WEBHOOK_SECRET}
-      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+      LINEARWATCH_INTERNAL_API_KEY: ${LINEARWATCH_INTERNAL_API_KEY}
       WORKSPACE_ID: ${WORKSPACE_ID:-}
       LOG_LEVEL: info
       IDENTITY_CONFIDENCE_THRESHOLD: "0.8"
@@ -61,8 +61,8 @@ services:
       context: .
       dockerfile: Dockerfile.web
     environment:
-      AGENTWATCH_INTERNAL_URL: http://server:8080
-      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+      LINEARWATCH_INTERNAL_URL: http://server:8080
+      LINEARWATCH_INTERNAL_API_KEY: ${LINEARWATCH_INTERNAL_API_KEY}
       PORT: "3000"
     ports:
       - "3000:3000"

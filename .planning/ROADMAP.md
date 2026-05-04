@@ -1,6 +1,6 @@
-# ROADMAP: agentwatch
+# ROADMAP: linearwatch
 
-**Project:** agentwatch — self-hosted AI agent observability for Linear workspaces
+**Project:** linearwatch — self-hosted AI agent observability for Linear workspaces
 **Core value:** Cross-agent attribution — for any issue, any team, any cycle, show which agent did what, what it cost, and whether the change held up.
 **Timeline:** 90 days (Days 1-21 → 22-60 → 61-90)
 **Granularity:** Coarse (3 phases)
@@ -26,7 +26,7 @@
   1. User can run `git clone && docker compose up` on a clean laptop and reach a working dashboard at `http://localhost:3000` within 5 minutes — no manual DB setup, no pre-populated config.
   2. A real Linear webhook (with valid HMAC) produces exactly one row in `events.raw_event` regardless of how many times it is replayed; a SHA-1-only GitHub webhook returns 401.
   3. The cost dashboard shows spend per agent broken down by team and cycle, sourced exclusively through `POST /api/v1/query` — no React component makes a direct Postgres call.
-  4. The setup wizard explicitly warns about the Linear AgentSession UI visibility change before any OAuth step completes; `agentwatch setup` and the dashboard wizard follow the same flow.
+  4. The setup wizard explicitly warns about the Linear AgentSession UI visibility change before any OAuth step completes; `linearwatch setup` and the dashboard wizard follow the same flow.
   5. `grep -r 'req.body' src/` returns empty; the `issues` ORM type has no `title: string` field; CI asserts raw title strings never appear in any query API response.
 **Plans**: 10 plans
 - [x] 01.01-repo-bootstrap-PLAN.md — pnpm workspace, tsconfig, Biome, Vitest, compose stack, env contract, CI scaffolding
@@ -46,22 +46,22 @@
 **Depends on**: Phase 1
 **Requirements**: INGEST-02, INGEST-07, INGEST-08, INGEST-09, ID-04, DASH-02, DASH-03, CLI-01, CLI-02, CLI-03, CLI-04, CLI-05, CLI-06, CLI-07, CLI-08, CLI-09, ALERT-01, ALERT-02, ALERT-03, ALERT-04, ALERT-05, ALERT-06, ALERT-07, SDK-01, SDK-02, SDK-03, SDK-04, SDK-05, SDK-06, OBS-05, PRIV-04
 **Success Criteria** (what must be TRUE):
-  1. A design partner can run `agentwatch lineage LIN-1234` and see every agent that touched the issue in order, with outcome — including cross-vendor sessions from GitHub PR enrichment.
-  2. `agentwatch report cost --team ENG --window 14d` returns a formatted report with cost-per-closed-issue that includes vendor-enriched cost data from Cursor (and one other vendor).
+  1. A design partner can run `linearwatch lineage LIN-1234` and see every agent that touched the issue in order, with outcome — including cross-vendor sessions from GitHub PR enrichment.
+  2. `linearwatch report cost --team ENG --window 14d` returns a formatted report with cost-per-closed-issue that includes vendor-enriched cost data from Cursor (and one other vendor).
   3. A `cost-spike.yaml` alert rule fires a Slack notification when an agent's weekly spend exceeds 3× its 28-day rolling average; the same rule does not double-fire within the same window bucket.
-  4. `@agentwatch/sdk` (Node) and `agentwatch` (PyPI) can emit `session_start`, `session_end`, and `cost_recorded` events to a running instance with only a workspace API key and server URL configured.
-  5. `agentwatch agent purge <id>` soft-deletes the agent, propagates the deletion through `cost_by_agent_daily`, and the agent no longer appears in any dashboard view.
+  4. `@linearwatch/sdk` (Node) and `linearwatch` (PyPI) can emit `session_start`, `session_end`, and `cost_recorded` events to a running instance with only a workspace API key and server URL configured.
+  5. `linearwatch agent purge <id>` soft-deletes the agent, propagates the deletion through `cost_by_agent_daily`, and the agent no longer appears in any dashboard view.
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: Launch
-**Goal**: Public Show HN launch with a benchmark blog post; any stranger can install agentwatch without asking questions; telemetry privacy guarantee is verified in CI before a single byte leaves a user's instance.
+**Goal**: Public Show HN launch with a benchmark blog post; any stranger can install linearwatch without asking questions; telemetry privacy guarantee is verified in CI before a single byte leaves a user's instance.
 **Depends on**: Phase 2
 **Requirements**: TELE-01, TELE-02, TELE-03, TELE-04, TELE-05, TELE-06, DEPLOY-04, LAUNCH-01, LAUNCH-02, LAUNCH-03, LAUNCH-04, LAUNCH-05, LAUNCH-06
 **Success Criteria** (what must be TRUE):
   1. With `TELEMETRY_OPT_IN` unset, a mock HTTP interceptor records zero outbound calls to the aggregator during a full daily cron run; with it set to `true`, exactly one correctly shaped payload is sent.
-  2. `helm install agentwatch ./chart` deploys all three services with resource limits, liveness probes, and PodDisruptionBudgets passing `helm lint`; `docker compose up` smoke test passes on a clean image in CI within 5 minutes.
-  3. A stranger following the quickstart on `docs.agentwatch.dev` can reach a working dashboard and emit their first SDK event without opening a GitHub issue for help.
+  2. `helm install linearwatch ./chart` deploys all three services with resource limits, liveness probes, and PodDisruptionBudgets passing `helm lint`; `docker compose up` smoke test passes on a clean image in CI within 5 minutes.
+  3. A stranger following the quickstart on `docs.linearwatch.dev` can reach a working dashboard and emit their first SDK event without opening a GitHub issue for help.
   4. The benchmark blog post contains at least one credible finding derived from 14+ days of opt-in telemetry from 3+ design-partner installations.
 **Plans**: TBD
 

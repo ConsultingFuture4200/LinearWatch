@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { SdkEventBody } from '@agentwatch/shared';
+import { SdkEventBody } from '@linearwatch/shared';
 import { sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { eventsReceived, webhookAckSeconds } from '../../../plugins/metrics.js';

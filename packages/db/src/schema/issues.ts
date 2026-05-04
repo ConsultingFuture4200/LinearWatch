@@ -1,4 +1,4 @@
-import type { TitleHash } from '@agentwatch/shared';
+import type { TitleHash } from '@linearwatch/shared';
 import { customType, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { cycles } from './cycles.js';
 import { teams } from './teams.js';
@@ -11,7 +11,7 @@ import { workspaces } from './workspaces.js';
  * `title_hash`, branded as `TitleHash` so accidentally storing a raw string is a
  * TypeScript compile error, not a runtime test failure.
  *
- * `hashTitle(raw, workspaceSalt)` (lands in plan 01.03 in `@agentwatch/shared`)
+ * `hashTitle(raw, workspaceSalt)` (lands in plan 01.03 in `@linearwatch/shared`)
  * is the only function permitted to produce a `TitleHash`.
  */
 const titleHashColumn = customType<{ data: TitleHash; driverData: string }>({

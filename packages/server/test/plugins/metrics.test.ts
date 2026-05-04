@@ -9,7 +9,7 @@ import {
 } from '../../src/plugins/metrics';
 
 describe('metrics registry (D-30)', () => {
-  it('exports all five named metrics with the agentwatch_ prefix', async () => {
+  it('exports all five named metrics with the linearwatch_ prefix', async () => {
     eventsReceived.inc({ source: 'linear' }, 0);
     webhookAckSeconds.observe({ source: 'linear' }, 0.001);
     jobsQueueDepth.set({ job_name: 'resolve_identity' }, 0);
@@ -17,11 +17,11 @@ describe('metrics registry (D-30)', () => {
     enrichmentLagSeconds.set({ source: 'linear' }, 0);
 
     const text = await client.register.metrics();
-    expect(text).toContain('agentwatch_events_received_total');
-    expect(text).toContain('agentwatch_webhook_ack_seconds');
-    expect(text).toContain('agentwatch_jobs_queue_depth');
-    expect(text).toContain('agentwatch_identity_resolver_confidence');
-    expect(text).toContain('agentwatch_enrichment_lag_seconds');
+    expect(text).toContain('linearwatch_events_received_total');
+    expect(text).toContain('linearwatch_webhook_ack_seconds');
+    expect(text).toContain('linearwatch_jobs_queue_depth');
+    expect(text).toContain('linearwatch_identity_resolver_confidence');
+    expect(text).toContain('linearwatch_enrichment_lag_seconds');
   });
 
   it('webhook_ack_seconds buckets cover the 200ms SLA', async () => {
@@ -29,6 +29,6 @@ describe('metrics registry (D-30)', () => {
     webhookAckSeconds.observe({ source: 'linear' }, 0.001);
     const text = await client.register.metrics();
     // Prom-client serialises buckets as `le="0.2"` (etc.) in the exposition.
-    expect(text).toMatch(/agentwatch_webhook_ack_seconds_bucket\{[^}]*le="0\.2"/);
+    expect(text).toMatch(/linearwatch_webhook_ack_seconds_bucket\{[^}]*le="0\.2"/);
   });
 });

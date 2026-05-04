@@ -41,7 +41,7 @@ Enabling the "agent session events" webhook category in your Linear OAuth applic
 Developers treat "enable webhook category" as a receiver-side config change. Linear treats it as a feature gate toggle for the entire workspace UI. The coupling is not obvious from the webhook configuration screen.
 
 **How to avoid:**
-- Document this behavior prominently in the agentwatch setup wizard and quickstart guide: "Enabling this category will change your Linear workspace UI."
+- Document this behavior prominently in the linearwatch setup wizard and quickstart guide: "Enabling this category will change your Linear workspace UI."
 - In the setup wizard step for OAuth app configuration, show an explicit warning checkbox before proceeding.
 - Use a dedicated test workspace (not a design partner's production workspace) for all initial development.
 
@@ -58,7 +58,7 @@ Developers treat "enable webhook category" as a receiver-side config change. Lin
 ### Pitfall 3: Linear webhook auto-disabled after endpoint downtime
 
 **What goes wrong:**
-If the agentwatch receiver is unresponsive for all three retry attempts (1 min, 1 hour, 6 hours — roughly 7 hours of total window), Linear silently disables the webhook. There is no outbound notification to the workspace operator. The agentwatch instance continues running but receives nothing. Dashboard shows no new activity. Operators assume no agents are active.
+If the linearwatch receiver is unresponsive for all three retry attempts (1 min, 1 hour, 6 hours — roughly 7 hours of total window), Linear silently disables the webhook. There is no outbound notification to the workspace operator. The linearwatch instance continues running but receives nothing. Dashboard shows no new activity. Operators assume no agents are active.
 
 **Why it happens:**
 Self-hosters take their container down for updates or a VPS goes offline. The 7-hour retry window is long enough that a routine maintenance window exhausts all retries.
@@ -132,7 +132,7 @@ Developers test the happy path (open PR, merge PR, open revert PR, merge revert 
 Two agents (e.g., Cursor and an internal agent) are both installed using the same Linear OAuth application — a shortcut some teams take to avoid creating multiple apps. Both share the same `linear_app_user_id`. The identity resolver treats them as one agent. Every metric (cost, reliability, lineage) for one agent is polluted with the other's activity.
 
 **Why it happens:**
-Teams setting up agentwatch often have agents configured by different people with different levels of Linear admin access. Reusing an existing OAuth app is the path of least resistance.
+Teams setting up linearwatch often have agents configured by different people with different levels of Linear admin access. Reusing an existing OAuth app is the path of least resistance.
 
 **How to avoid:**
 - In P1, add a detection heuristic: if a single `linear_app_user_id` is seen making sessions across what appear to be multiple vendor contexts (detected via SDK `session_start` events from different vendor fields, or via significantly different GitHub login patterns), surface this as a low-confidence resolver warning in the dashboard.
@@ -153,7 +153,7 @@ Teams setting up agentwatch often have agents configured by different people wit
 ### Pitfall 7: Vendor session ID reuse and cost data staleness
 
 **What goes wrong:**
-Vendor session IDs (Cursor `session_id`, Devin `run_id`) are not globally unique across all time — they are sequential or short-UUIDs that can be reused across workspace resets or API key rotations. If agentwatch's vendor polling worker encounters a session ID it has already seen but from a different time window, it either deduplicates silently (missing the new session) or merges the cost data (inflating the old session's cost).
+Vendor session IDs (Cursor `session_id`, Devin `run_id`) are not globally unique across all time — they are sequential or short-UUIDs that can be reused across workspace resets or API key rotations. If linearwatch's vendor polling worker encounters a session ID it has already seen but from a different time window, it either deduplicates silently (missing the new session) or merges the cost data (inflating the old session's cost).
 
 Additionally, vendor APIs publish cost data with lag. Cursor updated its billing model with a retroactive pricing change in June 2025 without advance notice. Stale cached cost values in `agent_sessions.cost_usd` that aren't refreshed within the 14-day enrichment window become permanently wrong.
 
@@ -255,11 +255,11 @@ Analytics workloads need different index strategies than OLTP. The fact table ne
 Self-hosters who already run PgBouncer in transaction mode (common in Supabase-style setups and Heroku-derived configs) point `DATABASE_URL` at the pooler. ORMs like Prisma use prepared statements by default. In PgBouncer transaction mode (versions before 1.21), prepared statements fail with `ERROR: prepared statement "s0" already exists` or silently execute the wrong statement. The error is intermittent — it only fires when two connections from different sessions happen to use the same statement name.
 
 **Why it happens:**
-The user's existing DATABASE_URL points at PgBouncer, not Postgres directly. The agentwatch docker-compose.yml points at its own Postgres container, which works fine in testing. The self-hoster overrides `DATABASE_URL` without reading the connection pooler compatibility note. The error is intermittent, so it doesn't appear during initial setup testing.
+The user's existing DATABASE_URL points at PgBouncer, not Postgres directly. The linearwatch docker-compose.yml points at its own Postgres container, which works fine in testing. The self-hoster overrides `DATABASE_URL` without reading the connection pooler compatibility note. The error is intermittent, so it doesn't appear during initial setup testing.
 
 **How to avoid:**
 - In the docker-compose.yml, use a `DATABASE_URL` that points to the bundled Postgres container (not a pooler). Document clearly: "If you use an external Postgres with PgBouncer, add `?pgbouncer=true` to the connection string or ensure PgBouncer >= 1.21 with `max_prepared_statements > 0`."
-- If using Prisma, add `?pgbouncer=true&connection_limit=1` to the URL when a pooler is detected (can be hinted via env var `AGENTWATCH_USE_PGBOUNCER=true`).
+- If using Prisma, add `?pgbouncer=true&connection_limit=1` to the URL when a pooler is detected (can be hinted via env var `LINEARWATCH_USE_PGBOUNCER=true`).
 - Add a startup health check that runs a prepared-statement smoke test and logs a clear warning if it fails.
 
 **Warning signs:**
@@ -351,13 +351,13 @@ If a workspace operator requests deletion of a specific agent's data (e.g., a te
 
 **How to avoid:**
 - Document the deletion contract: deletion marks the agent as `deleted_at` (soft delete), triggers an immediate `REFRESH MATERIALIZED VIEW CONCURRENTLY` on all rollup views that reference `agents`, and then physically deletes after the refresh completes.
-- CLI command: `agentwatch agent purge <agent_id>` implements this sequence atomically.
+- CLI command: `linearwatch agent purge <agent_id>` implements this sequence atomically.
 - Provide a migration that adds `deleted_at` to `agents` and excludes soft-deleted agents from all materialized view definitions.
 - Note: `REFRESH MATERIALIZED VIEW CONCURRENTLY` requires a unique index on the view — establish this as a requirement when views are first created.
 
 **Warning signs:**
 - `REFRESH MATERIALIZED VIEW` called without `CONCURRENTLY` in any cron job or migration — this blocks reads.
-- No `agentwatch agent purge` command exists or is tested.
+- No `linearwatch agent purge` command exists or is tested.
 - Materialized view definitions do not `WHERE deleted_at IS NULL`.
 
 **Phase to address:** P2 Enrichment — materialized views are a P2 performance optimization; the deletion contract must be defined at the same time the views are created.
@@ -500,5 +500,5 @@ If a workspace operator requests deletion of a specific agent's data (e.g., a te
 
 ---
 
-*Pitfalls research for: agentwatch — self-hosted AI agent observability platform*
+*Pitfalls research for: linearwatch — self-hosted AI agent observability platform*
 *Researched: 2026-05-03*

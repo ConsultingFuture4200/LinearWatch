@@ -483,7 +483,7 @@ interface QueryResponse {
 
 **How to constrain:** Each `MetricName` maps to a static SQL template in `src/query/metrics.ts`. The query builder substitutes only validated filter values (parameterized). No string interpolation of metric names into SQL — each metric has an explicit implementation function.
 
-**CLI uses the same API as the dashboard.** No separate CLI-only endpoint. Auth is the same workspace API key used by the SDK. The key is passed as `Authorization: Bearer <key>` header. Dashboard uses it server-side (never exposed to browser). CLI reads it from `~/.config/agentwatch/config.yaml` or `AGENTWATCH_API_KEY` env var.
+**CLI uses the same API as the dashboard.** No separate CLI-only endpoint. Auth is the same workspace API key used by the SDK. The key is passed as `Authorization: Bearer <key>` header. Dashboard uses it server-side (never exposed to browser). CLI reads it from `~/.config/linearwatch/config.yaml` or `LINEARWATCH_API_KEY` env var.
 
 ---
 
@@ -497,11 +497,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: agentwatch
-      POSTGRES_USER: agentwatch
+      POSTGRES_DB: linearwatch
+      POSTGRES_USER: linearwatch
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "agentwatch"]
+      test: ["CMD", "pg_isready", "-U", "linearwatch"]
 
   web:
     build: .
@@ -511,10 +511,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD}@postgres:5432/agentwatch
+      DATABASE_URL: postgres://linearwatch:${POSTGRES_PASSWORD}@postgres:5432/linearwatch
       LINEAR_WEBHOOK_SECRET: ${LINEAR_WEBHOOK_SECRET}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
-      AGENTWATCH_API_KEY: ${AGENTWATCH_API_KEY}
+      LINEARWATCH_API_KEY: ${LINEARWATCH_API_KEY}
       STORE_ISSUE_TITLES: ${STORE_ISSUE_TITLES:-false}
 
   worker:
@@ -523,11 +523,11 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
     environment:
-      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD}@postgres:5432/agentwatch
+      DATABASE_URL: postgres://linearwatch:${POSTGRES_PASSWORD}@postgres:5432/linearwatch
       CURSOR_API_KEY: ${CURSOR_API_KEY:-}
       DEVIN_API_KEY: ${DEVIN_API_KEY:-}
       TELEMETRY_OPT_IN: ${TELEMETRY_OPT_IN:-false}
-      TELEMETRY_AGGREGATOR_URL: ${TELEMETRY_AGGREGATOR_URL:-https://telemetry.agentwatch.dev}
+      TELEMETRY_AGGREGATOR_URL: ${TELEMETRY_AGGREGATOR_URL:-https://telemetry.linearwatch.dev}
 
 volumes:
   postgres_data:
@@ -594,7 +594,7 @@ Phase 2 (Days 22-60)
 [13] Reliability + Lineage dashboard views (parallel with [12])
 
 [14] Alert engine (YAML rules → evaluate_alerts cron → notifications)
-[15] CLI binary (agentwatch query/report/lineage/tail — all via /api/v1/query)
+[15] CLI binary (linearwatch query/report/lineage/tail — all via /api/v1/query)
 
 [16] SDK (Node + Python thin clients) — parallel with [14], [15]
 
@@ -667,7 +667,7 @@ Content-Type: application/json
 
 Storage: Postgres table `telemetry_events(id, workspace_token, date, payload jsonb, received_at)`. No ClickHouse needed at launch scale (< 1000 workspaces × 365 days = 365k rows/year). Revisit at 10k+ active workspaces.
 
-Workspace token generation on the user's side: `sha256(AGENTWATCH_API_KEY + "telemetry")` — not reversible, not linkable across datasets.
+Workspace token generation on the user's side: `sha256(LINEARWATCH_API_KEY + "telemetry")` — not reversible, not linkable across datasets.
 
 The aggregator runs as a single Fly.io app (or equivalent) with a small Postgres instance. Cost at launch: < $5/month.
 
@@ -729,7 +729,7 @@ The aggregator runs as a single Fly.io app (or equivalent) with a small Postgres
 | Devin API | Same polling pattern as Cursor | Devin run_id as correlation key |
 | Slack notifications | Simple HTTP POST to incoming webhook URL | No OAuth required |
 | Email notifications | SMTP relay (configurable in .env) | Resend or SMTP-compatible |
-| Telemetry aggregator | `POST https://telemetry.agentwatch.dev/v1/ingest` | Opt-in only; workspace token is opaque hash |
+| Telemetry aggregator | `POST https://telemetry.linearwatch.dev/v1/ingest` | Opt-in only; workspace token is opaque hash |
 
 ### Internal Boundaries
 
@@ -740,7 +740,7 @@ The aggregator runs as a single Fly.io app (or equivalent) with a small Postgres
 | web → worker | Via `graphile_worker.jobs` INSERT | `addJob(taskName, payload)` — no direct RPC |
 | CLI → web | `POST /api/v1/query` over HTTP | Same JSON contract as dashboard; API key auth |
 | SDK clients → web | `POST /api/v1/sdk/event` | Bearer API key; same raw_event pipeline |
-| worker → aggregator | `POST https://telemetry.agentwatch.dev/v1/ingest` | Daily, opt-in, no PII |
+| worker → aggregator | `POST https://telemetry.linearwatch.dev/v1/ingest` | Daily, opt-in, no PII |
 
 ---
 
@@ -751,7 +751,7 @@ The aggregator runs as a single Fly.io app (or equivalent) with a small Postgres
 | 1-3 workspaces, < 10k sessions/month | v0 as designed | Single `docker compose up`, 2GB RAM VPS |
 | 5-20 workspaces (design partner scale) | v0 as designed | Postgres on 4 vCPU, 8GB RAM. Index tuning if needed. |
 | 50+ workspaces (post-launch growth) | Add read replica for dashboard queries | Worker writes to primary; dashboard reads from replica |
-| 500+ workspaces or high-frequency agents | Consider ClickHouse for `agent_sessions` — same path Langfuse took | Langfuse hit this threshold at "billions of rows"; agentwatch at 100 workspaces × 100k sessions = 10M rows. Monitor; don't pre-optimize. |
+| 500+ workspaces or high-frequency agents | Consider ClickHouse for `agent_sessions` — same path Langfuse took | Langfuse hit this threshold at "billions of rows"; linearwatch at 100 workspaces × 100k sessions = 10M rows. Monitor; don't pre-optimize. |
 
 **First bottleneck:** Enrichment lag on vendor API rate limits. Mitigation: per-vendor rate-limit tracking in worker (token bucket in Postgres row), exponential backoff on 429s.
 
@@ -777,5 +777,5 @@ The aggregator runs as a single Fly.io app (or equivalent) with a small Postgres
 
 ---
 
-*Architecture research for: agentwatch — self-hosted AI agent observability*
+*Architecture research for: linearwatch — self-hosted AI agent observability*
 *Researched: 2026-05-03*

@@ -23,11 +23,11 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 // Each integration test uses its own dedicated database so concurrent or
 // sequential test files don't trample each other. We honour DATABASE_URL_TEST
 // only for host/credentials; the path component (DB name) is always
-// `agentwatch_webhook` for this file.
+// `linearwatch_webhook` for this file.
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_webhook');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_webhook');
 const SECRET = 'test-webhook-secret';
 
 interface FakeEnv {
@@ -82,8 +82,8 @@ describe.skipIf(!dbReachable)('POST /webhooks/linear', () => {
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_webhook');
-    await admin.query('CREATE DATABASE agentwatch_webhook');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_webhook');
+    await admin.query('CREATE DATABASE linearwatch_webhook');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

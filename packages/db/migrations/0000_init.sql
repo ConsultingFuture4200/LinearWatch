@@ -1,4 +1,4 @@
--- 0000_init.sql — agentwatch Phase 1 foundation schema (HAND-AUTHORED)
+-- 0000_init.sql — linearwatch Phase 1 foundation schema (HAND-AUTHORED)
 --
 -- This migration is the source of truth for the partitioned `events.raw_event`
 -- and the analytics indexes Drizzle cannot express. drizzle-kit generated a

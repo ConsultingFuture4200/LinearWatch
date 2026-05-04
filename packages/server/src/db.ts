@@ -1,4 +1,4 @@
-import { schema } from '@agentwatch/db';
+import { schema } from '@linearwatch/db';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 
@@ -14,7 +14,7 @@ type PoolInstance = InstanceType<typeof pg.Pool>;
  * worker's pool, not here).
  *
  * Notes:
- * - The shared `@agentwatch/db` `createDb()` factory is fine for one-off
+ * - The shared `@linearwatch/db` `createDb()` factory is fine for one-off
  *   scripts, but the server needs to inject its env-loaded connection string
  *   plus its own pool sizing, so we wrap drizzle directly here.
  */

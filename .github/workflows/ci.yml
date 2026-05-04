@@ -25,12 +25,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: agentwatch
-          POSTGRES_PASSWORD: agentwatch_dev_password
-          POSTGRES_DB: agentwatch
+          POSTGRES_USER: linearwatch
+          POSTGRES_PASSWORD: linearwatch_dev_password
+          POSTGRES_DB: linearwatch
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U agentwatch"
+          --health-cmd "pg_isready -U linearwatch"
           --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -40,13 +40,16 @@ jobs:
       - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Build workspace packages BEFORE typecheck — package.json#main points
+      # at dist/index.js, so dependent packages can't resolve types until the
+      # producer has built. Order matters.
+      - run: pnpm --filter @linearwatch/shared build
+      - run: pnpm --filter @linearwatch/db build
+      - run: pnpm --filter @linearwatch/server build
       - run: pnpm typecheck
-      - run: pnpm --filter @agentwatch/shared build
-      - run: pnpm --filter @agentwatch/db build
-      - run: pnpm --filter @agentwatch/server build
       - name: Run unit + integration tests
         env:
-          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
+          DATABASE_URL_TEST: postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres
         run: pnpm test
 
   # SETUP-02 / D-13: AgentSession warning verbatim copy gates Linear OAuth.
@@ -58,12 +61,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: agentwatch
-          POSTGRES_PASSWORD: agentwatch_dev_password
-          POSTGRES_DB: agentwatch
+          POSTGRES_USER: linearwatch
+          POSTGRES_PASSWORD: linearwatch_dev_password
+          POSTGRES_DB: linearwatch
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U agentwatch"
+          --health-cmd "pg_isready -U linearwatch"
           --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -72,21 +75,21 @@ jobs:
           node-version: '22'
       - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @agentwatch/shared build
-      - run: pnpm --filter @agentwatch/db build
-      - run: pnpm --filter @agentwatch/server build
-      - run: pnpm --filter @agentwatch/web build
+      - run: pnpm --filter @linearwatch/shared build
+      - run: pnpm --filter @linearwatch/db build
+      - run: pnpm --filter @linearwatch/server build
+      - run: pnpm --filter @linearwatch/web build
         env:
-          AGENTWATCH_INTERNAL_URL: http://localhost:8080
-          AGENTWATCH_INTERNAL_API_KEY: ci-internal-1234567890
-      - run: pnpm --filter @agentwatch/web exec playwright install --with-deps chromium
-      - name: Start agentwatch server
+          LINEARWATCH_INTERNAL_URL: http://localhost:8080
+          LINEARWATCH_INTERNAL_API_KEY: ci-internal-1234567890
+      - run: pnpm --filter @linearwatch/web exec playwright install --with-deps chromium
+      - name: Start linearwatch server
         run: |
-          DATABASE_URL=postgres://agentwatch:agentwatch_dev_password@localhost:5432/agentwatch \
+          DATABASE_URL=postgres://linearwatch:linearwatch_dev_password@localhost:5432/linearwatch \
           LINEAR_CLIENT_ID=ci-client-id \
           LINEAR_CLIENT_SECRET=ci-client-secret \
           LINEAR_WEBHOOK_SECRET=ci-webhook-secret \
-          AGENTWATCH_INTERNAL_API_KEY=ci-internal-1234567890 \
+          LINEARWATCH_INTERNAL_API_KEY=ci-internal-1234567890 \
           PORT=8080 \
           node packages/server/dist/index.js &
           # Wait for /health
@@ -96,9 +99,9 @@ jobs:
           done
       - name: Run setup-wizard e2e
         env:
-          AGENTWATCH_INTERNAL_URL: http://localhost:8080
-          AGENTWATCH_INTERNAL_API_KEY: ci-internal-1234567890
-        run: pnpm --filter @agentwatch/web exec playwright test
+          LINEARWATCH_INTERNAL_URL: http://localhost:8080
+          LINEARWATCH_INTERNAL_API_KEY: ci-internal-1234567890
+        run: pnpm --filter @linearwatch/web exec playwright test
 
   # D-31 / INGEST-04: 200 concurrent webhooks; p99 ack < 200ms.
   # Required for the foundation phase. Failure = red build.
@@ -108,12 +111,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: agentwatch
-          POSTGRES_PASSWORD: agentwatch_dev_password
-          POSTGRES_DB: agentwatch
+          POSTGRES_USER: linearwatch
+          POSTGRES_PASSWORD: linearwatch_dev_password
+          POSTGRES_DB: linearwatch
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U agentwatch"
+          --health-cmd "pg_isready -U linearwatch"
           --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -122,13 +125,13 @@ jobs:
           node-version: '22'
       - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @agentwatch/shared build
-      - run: pnpm --filter @agentwatch/db build
-      - run: pnpm --filter @agentwatch/server build
+      - run: pnpm --filter @linearwatch/shared build
+      - run: pnpm --filter @linearwatch/db build
+      - run: pnpm --filter @linearwatch/server build
       - name: Run webhook-ack bench (D-31)
         env:
-          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
-        run: pnpm --filter @agentwatch/server bench:webhook-ack
+          DATABASE_URL_TEST: postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres
+        run: pnpm --filter @linearwatch/server bench:webhook-ack
 
   # PRIV-03 / Pitfall 13: seeded titles never appear in any query API response.
   # Required for the foundation phase.
@@ -138,12 +141,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: agentwatch
-          POSTGRES_PASSWORD: agentwatch_dev_password
-          POSTGRES_DB: agentwatch
+          POSTGRES_USER: linearwatch
+          POSTGRES_PASSWORD: linearwatch_dev_password
+          POSTGRES_DB: linearwatch
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U agentwatch"
+          --health-cmd "pg_isready -U linearwatch"
           --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
@@ -152,13 +155,13 @@ jobs:
           node-version: '22'
       - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @agentwatch/shared build
-      - run: pnpm --filter @agentwatch/db build
-      - run: pnpm --filter @agentwatch/server build
+      - run: pnpm --filter @linearwatch/shared build
+      - run: pnpm --filter @linearwatch/db build
+      - run: pnpm --filter @linearwatch/server build
       - name: Privacy guard (PRIV-03, Pitfall 13)
         env:
-          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
-        run: pnpm --filter @agentwatch/server test -- privacy-guard no-title-column
+          DATABASE_URL_TEST: postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres
+        run: pnpm --filter @linearwatch/server test -- privacy-guard no-title-column
 
   # DEPLOY-01: docker compose up reaches the dashboard within 5 minutes on a
   # clean image. Uses scripts/smoke-compose.sh from plan 01.01 unchanged.
@@ -175,6 +178,6 @@ jobs:
           LINEAR_CLIENT_ID: smoke-client
           LINEAR_CLIENT_SECRET: smoke-secret
           LINEAR_WEBHOOK_SECRET: smoke-webhook-secret
-          AGENTWATCH_INTERNAL_API_KEY: ci-smoke-internal-1234567890
-          POSTGRES_PASSWORD: agentwatch_dev_password
+          LINEARWATCH_INTERNAL_API_KEY: ci-smoke-internal-1234567890
+          POSTGRES_PASSWORD: linearwatch_dev_password
         run: bash scripts/smoke-compose.sh

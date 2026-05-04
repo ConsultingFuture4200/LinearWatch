@@ -1,5 +1,5 @@
 /**
- * @agentwatch/shared — package entry.
+ * @linearwatch/shared — package entry.
  *
  * Privacy (D-26 / D-27 / Pitfall 4 / Pitfall 13):
  *   `hashTitle()` is the ONLY function permitted to read raw issue titles.

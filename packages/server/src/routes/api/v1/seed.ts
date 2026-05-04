@@ -8,7 +8,7 @@ import { clearSyntheticData, insertSyntheticData } from '../../../seed/synthetic
  *
  * Both Bearer-protected via the existing `authBearer` plugin. The wizard's
  * "Try with synthetic data" CTA POSTs to /seed; the future P2 CLI command
- * `agentwatch admin clear-seed` POSTs to /admin/clear-seed.
+ * `linearwatch admin clear-seed` POSTs to /admin/clear-seed.
  *
  * The `seed` endpoint is idempotent: if the workspace already has *-demo
  * agents, it returns `{ inserted: 0 }` without touching the database.

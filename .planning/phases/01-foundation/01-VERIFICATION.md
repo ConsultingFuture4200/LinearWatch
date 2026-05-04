@@ -13,8 +13,8 @@ human_verification:
     why_human: "SC#2 was verified end-to-end against an injected Fastify request; first delivery from a real Linear workspace (Business or Enterprise plan) should be observed before declaring Phase 1 complete"
   - test: "Walk through the setup wizard at /setup in a browser"
     expected: "Step 2 modal renders verbatim D-13 copy; pressing Escape does not dismiss; only `I've notified my team` advances; Linear OAuth round-trips; API key reveal happens once; --seed populates the cost view; webhook URL + cURL block on the Done step"
-    why_human: "SETUP-02 verbatim copy is verified by Playwright (3 tests) but the full 7-step UX should be eyeballed once with a real Linear OAuth app to confirm the hand-off between steps feels right and the AGENTWATCH_PUBLIC_URL placeholder substitutes correctly"
-  - test: "Run the webhook-ack benchmark `pnpm --filter @agentwatch/server bench:webhook-ack` against postgres:16-alpine on the target deployment hardware"
+    why_human: "SETUP-02 verbatim copy is verified by Playwright (3 tests) but the full 7-step UX should be eyeballed once with a real Linear OAuth app to confirm the hand-off between steps feels right and the LINEARWATCH_PUBLIC_URL placeholder substitutes correctly"
+  - test: "Run the webhook-ack benchmark `pnpm --filter @linearwatch/server bench:webhook-ack` against postgres:16-alpine on the target deployment hardware"
     expected: "p99 < 200ms with non2xx=0 across 200 concurrent connections for 15s"
     why_human: "INGEST-04 / D-31 was verified locally at p99=169ms on the developer machine; production-class hardware should be measured at least once because the 200ms SLA has only ~30ms of headroom and contention characteristics differ"
   - test: "Confirm GitHub branch protection on `main` requires all 6 CI gates"
@@ -39,7 +39,7 @@ human_verification:
 | SC#1 | `git clone && docker compose up` reaches dashboard at http://localhost:3000 within 5 min on clean laptop, no manual DB setup | ✓ VERIFIED (in code) | `compose.yml` (3-service stack postgres:16-alpine + server + worker + web); `Dockerfile.web` Next.js standalone, `Dockerfile.worker` shared server+worker; `scripts/smoke-compose.sh` enforces 300s budget; CI `compose-smoke` job runs on clean ubuntu-latest. Not exercisable in this environment (no Docker daemon access) — flagged for human verification. |
 | SC#2 | Real Linear webhook with valid HMAC produces exactly one `events.raw_event` row regardless of replays; SHA-1-only GitHub webhook returns 401 (foundation pattern) | ✓ VERIFIED | `packages/server/src/routes/webhooks/linear.ts`: `timingSafeEqual` HMAC verify (line 84, line 130); idempotency via NOT-EXISTS CTE on `(source, upstream_id)` plus `ON CONFLICT (source, upstream_id, received_at) DO NOTHING` defense-in-depth; raw-body integrity via `($N::text)::jsonb` cast (line 128); 5x-replay test in `idempotency.test.ts` asserts exactly 1 row; `webhook-linear.test.ts` asserts 401 on invalid HMAC and structural equality of stored payload. GitHub receiver is P2 by phase scope. |
 | SC#3 | Cost dashboard shows spend per agent broken down by team and cycle, sourced exclusively through `POST /api/v1/query` — no React component makes a direct Postgres call | ✓ VERIFIED | `packages/web/src/lib/query.ts` is the sole client; `packages/web/src/app/(dashboard)/cost/page.tsx` calls `fetchQuery({ metric: 'cost_by_agent', dimension: 'agent', ... })`; `bash scripts/check-web-no-db-import.sh` returns "OK: no DB driver imports under packages/web/src" — exit 0. Verified directly. |
-| SC#4 | Setup wizard explicitly warns about Linear AgentSession UI visibility before any OAuth step completes; `agentwatch setup` and dashboard wizard follow the same flow (CLI parity is P2) | ✓ VERIFIED | `packages/web/src/components/agentsession-warning-modal.tsx` line 29 contains verbatim D-13 copy; `packages/web/src/app/setup/agentsession-warning/page.tsx` line 31 carries the same string in a server-rendered sr-only div; `onEscapeKeyDown={(e) => e.preventDefault()}` line 72; "I've notified my team" verbatim button label confirmed at agentsession-warning-modal.tsx:34. Playwright `setup-wizard.spec.ts` 3 tests assert verbatim copy + Escape blocked + click-through advance. CLI placeholder at `packages/server/bin/agentwatch.js` per D-11. |
+| SC#4 | Setup wizard explicitly warns about Linear AgentSession UI visibility before any OAuth step completes; `linearwatch setup` and dashboard wizard follow the same flow (CLI parity is P2) | ✓ VERIFIED | `packages/web/src/components/agentsession-warning-modal.tsx` line 29 contains verbatim D-13 copy; `packages/web/src/app/setup/agentsession-warning/page.tsx` line 31 carries the same string in a server-rendered sr-only div; `onEscapeKeyDown={(e) => e.preventDefault()}` line 72; "I've notified my team" verbatim button label confirmed at agentsession-warning-modal.tsx:34. Playwright `setup-wizard.spec.ts` 3 tests assert verbatim copy + Escape blocked + click-through advance. CLI placeholder at `packages/server/bin/linearwatch.js` per D-11. |
 | SC#5 | `grep -r 'req.body' src/` returns empty (allow-req-body annotated exceptions OK); the `issues` ORM type has no `title: string` field; CI asserts raw title strings never appear in any query API response | ✓ VERIFIED | `bash scripts/check-no-req-body.sh` → "OK: no req.body in production code" (verified directly); `packages/db/src/schema/issues.ts` has only `titleHash: titleHashColumn('title_hash').notNull()` and an explicit "NO `title: text('title')` field anywhere" comment — no `title:` declaration; `bash scripts/check-no-title-leak.sh` → "OK: issues schema has title_hash; no title column" (verified directly); `packages/server/test/integration/privacy-guard.test.ts` seeds `__SEED_DETECTOR_PHASE1_*` through real `/webhooks/linear` route and asserts absence in 8 (metric × dimension) query API responses; `packages/server/test/integration/no-title-column.test.ts` queries `information_schema.columns` to confirm. Wired into CI `static-checks` + `privacy-guard` jobs. |
 
 **Score:** 5/5 success criteria verified
@@ -82,13 +82,13 @@ human_verification:
 | `packages/server/src/routes/api/v1/query.ts` | Bearer-auth + Zod parse + dispatch | ✓ VERIFIED | `{ preHandler: fastify.authBearer }`; QueryRequest.safeParse; allow-req-body annotated |
 | `packages/server/src/routes/api/v1/sdk-event.ts` | Bearer + idempotency_key (caller or synth) | ✓ VERIFIED | `synthesizeKey(workspaceId, sessionId, eventType, minuteBucket)`; CTE NOT-EXISTS dedup; ON CONFLICT defense |
 | `packages/server/src/routes/api/v1/agents-confirm.ts` | PENDING_CONFIRMATION → CONFIRMED | ✓ VERIFIED | UPDATE … WHERE state='PENDING_CONFIRMATION'; 404 on soft-deleted agent |
-| `packages/server/src/routes/api/v1/setup.ts` | Workspace bootstrap, key generation, OAuth callback | ✓ VERIFIED | `agw_` + 32 base64url; sha256 hash stored; 409 on second bootstrap; setup.test.ts 9 cases |
+| `packages/server/src/routes/api/v1/setup.ts` | Workspace bootstrap, key generation, OAuth callback | ✓ VERIFIED | `lw_` + 32 base64url; sha256 hash stored; 409 on second bootstrap; setup.test.ts 9 cases |
 | `packages/server/src/routes/api/v1/seed.ts` | Bearer-auth seed + clear-seed | ✓ VERIFIED | calls insertSyntheticData; idempotent; clear-seed cascades demo rows |
 | `packages/server/src/routes/api/v1/workspace.ts` | warnings + seed-status endpoints (NEW) | ✓ VERIFIED | Bearer-auth GETs added in 01.08 to support dashboard banners |
 | `packages/server/src/seed/synthetic.ts` | 50 sessions, 3 demo agents, hashTitle | ✓ VERIFIED | cursor-demo/devin-demo/internal-bot-demo; 24+18+8=50 sessions across 14 days; hashTitle for all titles; intentional anomaly day at $20 |
-| `packages/server/bin/agentwatch.js` | CLI placeholder per D-11 | ✓ VERIFIED | prints dashboard URL message |
-| `packages/web/src/lib/query.ts` | Single typed POST /api/v1/query client | ✓ VERIFIED | uses AGENTWATCH_INTERNAL_URL; cache:'no-store' |
-| `packages/web/src/lib/api.ts` | confirmAgent + fetchActiveWarnings + fetchSeedStatus | ✓ VERIFIED | server-only; no NEXT_PUBLIC_AGENTWATCH_INTERNAL_API_KEY exists |
+| `packages/server/bin/linearwatch.js` | CLI placeholder per D-11 | ✓ VERIFIED | prints dashboard URL message |
+| `packages/web/src/lib/query.ts` | Single typed POST /api/v1/query client | ✓ VERIFIED | uses LINEARWATCH_INTERNAL_URL; cache:'no-store' |
+| `packages/web/src/lib/api.ts` | confirmAgent + fetchActiveWarnings + fetchSeedStatus | ✓ VERIFIED | server-only; no NEXT_PUBLIC_LINEARWATCH_INTERNAL_API_KEY exists |
 | `packages/web/src/app/(dashboard)/cost/page.tsx` | Cost view fetches via fetchQuery | ✓ VERIFIED | calls cost_by_agent + agent_session_count via lib/query.ts |
 | `packages/web/src/components/identity-side-panel.tsx` | DASH-04 confirm UI, modal={false} | ✓ VERIFIED | line 61 `<Dialog … modal={false}>`; w-[480px]; verbatim copy from UI-SPEC |
 | `packages/web/src/components/agentsession-warning-modal.tsx` | Verbatim D-13 copy + Escape disabled | ✓ VERIFIED | line 29 verbatim string; line 72 `onEscapeKeyDown={(e) => e.preventDefault()}` |
@@ -103,7 +103,7 @@ human_verification:
 | `scripts/smoke-compose.sh` | DEPLOY-01 5-min boot test | ✓ VERIFIED (in code) | injects synthetic env; polls :3000 + :8080/health with 300s budget |
 | `.github/workflows/ci.yml` | All 6 phase 1 gates | ✓ VERIFIED | static-checks, lint-typecheck-test, bench-webhook-ack, e2e-setup-wizard, privacy-guard, compose-smoke (independent jobs) |
 | `compose.yml` | postgres:16-alpine + server + worker + web; no Redis/Kafka/TSDB | ✓ VERIFIED | 4 services; zero matches for redis/kafka/clickhouse/timescale/influxdb |
-| `.env.example` | DEPLOY-03 fail-fast contract | ✓ VERIFIED | DATABASE_URL, LINEAR_CLIENT_*, LINEAR_WEBHOOK_SECRET, AGENTWATCH_INTERNAL_API_KEY, plus tunables with defaults |
+| `.env.example` | DEPLOY-03 fail-fast contract | ✓ VERIFIED | DATABASE_URL, LINEAR_CLIENT_*, LINEAR_WEBHOOK_SECRET, LINEARWATCH_INTERNAL_API_KEY, plus tunables with defaults |
 | `README.md` | Reverse-proxy + PgBouncer + Status section | ✓ VERIFIED | nginx + Caddy snippets; `?pgbouncer=true`; Linear Business plan note; Status section lists all 6 CI gates |
 
 ### Key Link Verification
@@ -119,10 +119,10 @@ human_verification:
 | `packages/server/src/query/dispatcher.ts` | MetricName enum | `Record<MetricName, SqlFn>` | ✓ WIRED | TypeScript refuses to compile if a metric is missing |
 | `packages/server/src/routes/api/v1/sdk-event.ts` | events.raw_event source='sdk' | `INSERT … VALUES ('sdk', $idempotencyKey, …) ON CONFLICT … DO NOTHING` | ✓ WIRED | sdk-event.test.ts 5/5 |
 | `packages/web/src/app/(dashboard)/cost/page.tsx` | `lib/query.ts` | `await fetchQuery({ metric: 'cost_by_agent', … })` | ✓ WIRED | RSC server-side fetch |
-| `packages/web/src/lib/query.ts` | server `/api/v1/query` | `fetch(${AGENTWATCH_INTERNAL_URL}/api/v1/query, Bearer)` | ✓ WIRED | grep confirms env-var read |
-| `packages/db/src/schema/issues.ts` | `packages/shared/src/privacy.ts` | `import type { TitleHash } from '@agentwatch/shared'` + `customType<{ data: TitleHash }>` | ✓ WIRED | brand carries through to migration |
+| `packages/web/src/lib/query.ts` | server `/api/v1/query` | `fetch(${LINEARWATCH_INTERNAL_URL}/api/v1/query, Bearer)` | ✓ WIRED | grep confirms env-var read |
+| `packages/db/src/schema/issues.ts` | `packages/shared/src/privacy.ts` | `import type { TitleHash } from '@linearwatch/shared'` + `customType<{ data: TitleHash }>` | ✓ WIRED | brand carries through to migration |
 | `.github/workflows/ci.yml` | `scripts/check-no-req-body.sh` | bash invocation in static-checks job | ✓ WIRED | also runs check-no-title-leak + check-web-no-db-import |
-| `.github/workflows/ci.yml` | `privacy-guard.test.ts` | `pnpm --filter @agentwatch/server test -- privacy-guard no-title-column` | ✓ WIRED | line 161 |
+| `.github/workflows/ci.yml` | `privacy-guard.test.ts` | `pnpm --filter @linearwatch/server test -- privacy-guard no-title-column` | ✓ WIRED | line 161 |
 | `.github/workflows/ci.yml` | `scripts/smoke-compose.sh` | `bash scripts/smoke-compose.sh` in compose-smoke job | ✓ WIRED | line 165 |
 
 ### Behavioral Spot-Checks
@@ -142,7 +142,7 @@ human_verification:
 | 6 CI gates present | `grep -nE "static-checks\|bench-webhook-ack\|e2e-setup-wizard\|privacy-guard\|compose-smoke\|lint-typecheck-test" .github/workflows/ci.yml` | all 6 jobs at top level | ✓ PASS |
 | Phase 1 integration test count | `ls packages/server/test/integration/ \| wc -l` | 13 integration test files (agents-confirm, detect-shared-app, idempotency, migrations-on-startup, no-title-column, partition-rotation, privacy-guard, query-api, resolve-identity, sdk-event, seed, setup, webhook-linear) | ✓ PASS |
 | `docker compose up` smoke | `bash scripts/smoke-compose.sh` | not exercised — Docker daemon not accessible in this verifier environment; CI runs on every push | ? SKIP (human verification) |
-| Webhook-ack bench | `pnpm --filter @agentwatch/server bench:webhook-ack` | not exercised here; 01.05 SUMMARY records local p99=169ms; CI runs on every push | ? SKIP (human verification) |
+| Webhook-ack bench | `pnpm --filter @linearwatch/server bench:webhook-ack` | not exercised here; 01.05 SUMMARY records local p99=169ms; CI runs on every push | ? SKIP (human verification) |
 
 ### Data-Flow Trace (Level 4)
 

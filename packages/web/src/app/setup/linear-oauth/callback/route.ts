@@ -12,7 +12,7 @@ import { type NextRequest, NextResponse } from 'next/server';
  *
  * The exchange is intentionally minimal in P1 — see
  * setup.ts route handler for the full rationale. P2/P3 will use the
- * resulting access token for agentwatch-as-agent endpoints.
+ * resulting access token for linearwatch-as-agent endpoints.
  */
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const url = new URL(req.url);

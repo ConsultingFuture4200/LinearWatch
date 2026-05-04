@@ -1,8 +1,8 @@
-# agentwatch
+# linearwatch
 
 ## What This Is
 
-agentwatch is a self-hosted, open-source observability layer for AI agents working in Linear workspaces. It ingests Linear Agent Session webhooks, GitHub PR outcomes, and agent vendor cost data; resolves them into a unified agent identity; and exposes cost, reliability, and lineage analytics through a dashboard, CLI, and YAML-defined alert rules.
+linearwatch is a self-hosted, open-source observability layer for AI agents working in Linear workspaces. It ingests Linear Agent Session webhooks, GitHub PR outcomes, and agent vendor cost data; resolves them into a unified agent identity; and exposes cost, reliability, and lineage analytics through a dashboard, CLI, and YAML-defined alert rules.
 
 Built for engineering leaders and platform engineers at 10-50 person startups running three or more agents (Cursor, Devin, Codex, Sentry Seer, internal) concurrently in Linear — teams who self-host Plausible/Langfuse/Supabase and prefer cloning a repo to filling out a demo form.
 
@@ -37,7 +37,7 @@ Built for engineering leaders and platform engineers at 10-50 person startups ru
 - [ ] Lineage dashboard view: per-issue timeline of every agent that touched it
 - [ ] Setup wizard for first-run configuration
 - [ ] Internal query API: POST `/api/v1/query` with `metric`/`dimension`/`filters`/`window`
-- [ ] CLI `agentwatch` with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` commands
+- [ ] CLI `linearwatch` with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` commands
 
 #### Alerts
 - [ ] YAML rule format with `name`/`when`/`window`/`notify` fields
@@ -70,11 +70,11 @@ Built for engineering leaders and platform engineers at 10-50 person startups ru
 
 ## Context
 
-**Domain context.** The agent-on-Linear ecosystem is heterogeneous and increasingly expensive. Each vendor (Cursor, Devin, Codex, Seer) exposes its own session log; Linear shows the comment thread; nobody shows the cross-agent runtime view. The closest analog is Definity for Spark/Databricks: runtime telemetry → agentic root-cause analysis → cost and reliability optimization. agentwatch is positioned as APM for agents anchored on Linear.
+**Domain context.** The agent-on-Linear ecosystem is heterogeneous and increasingly expensive. Each vendor (Cursor, Devin, Codex, Seer) exposes its own session log; Linear shows the comment thread; nobody shows the cross-agent runtime view. The closest analog is Definity for Spark/Databricks: runtime telemetry → agentic root-cause analysis → cost and reliability optimization. linearwatch is positioned as APM for agents anchored on Linear.
 
 **Linear specifics.** Linear's Agent Session webhooks expose `actor=app` events. Access requires Business or Enterprise plan. `linear_app_user_id` is the stable identifier for an agent within a workspace.
 
-**Naming.** Local working directory is `Linearwatch`. Canonical project name is **agentwatch** — used in PRD, README, repo name, package names, CLI binary, and all surfaces.
+**Naming.** Local working directory is `Linearwatch`. Canonical project name is **linearwatch** — used in PRD, README, repo name, package names, CLI binary, and all surfaces.
 
 **Distribution model.** Build-in-public from Day 1, MIT licensed, public roadmap, public Discord. v0.1 launch via Show HN backed by a benchmark blog post drawn from opt-in telemetry. Target: 3-5 active design-partner installations and Show HN moment within 90 days.
 
@@ -85,7 +85,7 @@ Built for engineering leaders and platform engineers at 10-50 person startups ru
 - **Tech stack — Dashboard**: Next.js (web UI). Reads exclusively through internal query API; no direct DB access from React components.
 - **Tech stack — Backend**: TBD between Node and Go. Decision deferred to research phase. Must support Node SDK and Python SDK as first-class clients.
 - **Tech stack — Storage**: Postgres only. No Redis, no Kafka, no time-series DB in v0.
-- **Tech stack — Deployment**: Docker compose as primary distribution; Helm chart as secondary. Single-binary CLI (`agentwatch`).
+- **Tech stack — Deployment**: Docker compose as primary distribution; Helm chart as secondary. Single-binary CLI (`linearwatch`).
 - **Timeline**: 90 days from initialization to v0.1 release + Show HN launch. Phase 1 (Days 1-21), Phase 2 (Days 22-60), Phase 3 (Days 61-90).
 - **Budget — operational**: Self-hosted by users. Project itself runs on opt-in telemetry aggregator (small hosted service) plus docs site. Aim for low single-digit dollars/month at launch scale.
 - **Performance**: Webhook receiver p99 < 200ms ack; dashboard query p95 < 1s over 90d on 100k-session workspace; enrichment lag < 5min between PR merge and reflected outcome.
@@ -98,7 +98,7 @@ Built for engineering leaders and platform engineers at 10-50 person startups ru
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Project name `agentwatch` (over `Linearwatch`) | PRD canonical name; positions cross-vendor not Linear-only despite Linear being the v0 anchor | — Pending |
+| Project name `linearwatch` (over `Linearwatch`) | PRD canonical name; positions cross-vendor not Linear-only despite Linear being the v0 anchor | — Pending |
 | Postgres-only in v0 (no Redis/Kafka/TSDB) | Deployment simplicity is the #1 quality bar — `docker compose up` in 5 min on a laptop | — Pending |
 | Single-tenant in v0 | One Postgres = one workspace. Avoids tenant isolation complexity until paying customers exist | — Pending |
 | DSL-only rules engine (no custom SQL) | Safety: untrusted YAML in version-controlled rules dirs shouldn't yield SQL injection vectors | — Pending |

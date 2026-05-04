@@ -1,5 +1,5 @@
 {
-  "name": "@agentwatch/db",
+  "name": "@linearwatch/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
-    "@agentwatch/shared": "workspace:^",
+    "@linearwatch/shared": "workspace:^",
     "drizzle-orm": "0.45.2",
     "pg": "8.13.1"
   },

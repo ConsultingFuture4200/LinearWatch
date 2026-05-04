@@ -1,4 +1,4 @@
-# agentwatch — Product Requirements Document
+# linearwatch — Product Requirements Document
 
 **Version:** 0.1.0
 **Status:** Draft
@@ -9,7 +9,7 @@
 
 ## 1. Summary
 
-agentwatch is a self-hosted, open-source observability layer for AI agents working in Linear workspaces. It ingests Linear Agent Session webhooks, GitHub PR outcomes, and agent vendor cost data; resolves them into a unified agent identity; and exposes cost, reliability, and lineage analytics through a dashboard, CLI, and YAML-defined alert rules.
+linearwatch is a self-hosted, open-source observability layer for AI agents working in Linear workspaces. It ingests Linear Agent Session webhooks, GitHub PR outcomes, and agent vendor cost data; resolves them into a unified agent identity; and exposes cost, reliability, and lineage analytics through a dashboard, CLI, and YAML-defined alert rules.
 
 The 90-day MVP target is a v0.1 release with three to five active design-partner installations and a Show HN launch backed by a benchmark blog post.
 
@@ -75,11 +75,11 @@ A separate, opt-in anonymized telemetry path branches off the enrichment worker 
 
 **Dashboard.** Next.js application. Three views (Cost, Reliability, Lineage) plus a setup wizard. Reads exclusively through the internal query API.
 
-**CLI.** Single binary (`agentwatch`). Commands: `query`, `report`, `lineage`, `tail`, `rules test`. Reads through the same query API as the dashboard.
+**CLI.** Single binary (`linearwatch`). Commands: `query`, `report`, `lineage`, `tail`, `rules test`. Reads through the same query API as the dashboard.
 
 **Alerts.** YAML-defined rules evaluated on a 5-minute cron. v0 supports two rule types: cost anomaly (multiple of rolling average) and reliability regression (threshold breach over window). Notifications via Slack webhook, email, and generic webhook.
 
-**Internal SDK.** Three thin clients (Node, Python, Go) that emit a small set of events (`session_start`, `session_end`, `cost_recorded`) to the agentwatch ingestion endpoint. Authenticated with a workspace API key.
+**Internal SDK.** Three thin clients (Node, Python, Go) that emit a small set of events (`session_start`, `session_end`, `cost_recorded`) to the linearwatch ingestion endpoint. Authenticated with a workspace API key.
 
 **Anonymizer + aggregator.** Separate service path. If `TELEMETRY_OPT_IN=true`, the anonymizer emits a daily rollup containing only `(agent_name, cost_bucket, outcome, model_tier, workspace_size_bucket)` to the hosted aggregator. No issue content, no code, no identifying strings. Aggregator runs as a separate hosted service maintained by the project.
 
@@ -126,13 +126,13 @@ Internal HTTP API used by both dashboard and CLI. POST `/api/v1/query` with a JS
 ### 7.2 CLI commands
 
 ```
-agentwatch query "<natural language fragment>"   # parsed into structured query
-agentwatch report cost --team ENG --window 14d
-agentwatch report reliability --agent cursor
-agentwatch lineage LIN-1234
-agentwatch tail
-agentwatch rules test rules/cost-spike.yaml
-agentwatch setup
+linearwatch query "<natural language fragment>"   # parsed into structured query
+linearwatch report cost --team ENG --window 14d
+linearwatch report reliability --agent cursor
+linearwatch lineage LIN-1234
+linearwatch tail
+linearwatch rules test rules/cost-spike.yaml
+linearwatch setup
 ```
 
 The `query` command accepts a small DSL in v0 — pure natural language is deferred to v0.2 once an LLM-powered translator is added.
@@ -207,7 +207,7 @@ Exit criteria: at least one design partner has caught a real anomaly using the t
 Goal: public Show HN launch with benchmark post. Five active installations.
 
 - Production-grade Docker compose and Helm chart
-- Documentation site (docs.agentwatch.dev or equivalent) with quickstart, configuration, SDK
+- Documentation site (docs.linearwatch.dev or equivalent) with quickstart, configuration, SDK
 - Anonymized telemetry pipeline and aggregator service deployed
 - Benchmark blog post drafted from aggregated opt-in data
 - Show HN launch on a Tuesday or Wednesday morning
@@ -250,14 +250,14 @@ Exit criteria: launch hits HN front page or comparable distribution moment; 500+
 ### A. Glossary
 
 - **Agent Session** — Linear's term for an interaction between a user and an `actor=app` agent, exposed via webhook events.
-- **Identity resolver** — agentwatch's mapping layer that unifies events from Linear, GitHub, and vendor APIs into a single `agent_session_id`.
-- **Revert window** — the 14-day period after a PR merges during which agentwatch tracks whether the change is reverted, used as a reliability signal.
+- **Identity resolver** — linearwatch's mapping layer that unifies events from Linear, GitHub, and vendor APIs into a single `agent_session_id`.
+- **Revert window** — the 14-day period after a PR merges during which linearwatch tracks whether the change is reverted, used as a reliability signal.
 - **Outcome** — the terminal state of an agent session: `closed`, `abandoned`, `reverted`, `failed`, or `open`.
 
 ### B. Related work
 
-Definity (data pipelines), Mezmo AURA, Logz.io agent observability, Langfuse and Helicone (LLM observability, single-application focus), Sentry Seer (RCA agent for Linear). agentwatch is positioned distinctly as cross-vendor agent ops anchored in the Linear workspace.
+Definity (data pipelines), Mezmo AURA, Logz.io agent observability, Langfuse and Helicone (LLM observability, single-application focus), Sentry Seer (RCA agent for Linear). linearwatch is positioned distinctly as cross-vendor agent ops anchored in the Linear workspace.
 
 ### C. License and governance
 
-MIT licensed. Project maintained under YOUR_USERNAME/agentwatch with a public roadmap, public Discord, and quarterly maintainer meetings once a contributor base exists. Trademark and any future commercial entity tracked separately.
+MIT licensed. Project maintained under YOUR_USERNAME/linearwatch with a public roadmap, public Discord, and quarterly maintainer meetings once a contributor base exists. Trademark and any future commercial entity tracked separately.

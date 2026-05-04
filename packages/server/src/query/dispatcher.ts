@@ -1,4 +1,4 @@
-import type { MetricName, QueryRequest, QueryRow } from '@agentwatch/shared';
+import type { MetricName, QueryRequest, QueryRow } from '@linearwatch/shared';
 import type { ServerDb } from '../db.js';
 import { agentSessionCount } from './metrics/agent-session-count.js';
 import { costByAgent } from './metrics/cost-by-agent.js';

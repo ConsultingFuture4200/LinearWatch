@@ -19,7 +19,7 @@ export default function SettingsPage(): React.JSX.Element {
   // Workspace name display: read from a server env in P1 — the wizard
   // (Plan 01.09) is responsible for setting this. Falls back to a
   // placeholder when unset.
-  const workspaceName = process.env.AGENTWATCH_WORKSPACE_NAME ?? 'workspace';
+  const workspaceName = process.env.LINEARWATCH_WORKSPACE_NAME ?? 'workspace';
   const threshold = process.env.IDENTITY_CONFIDENCE_THRESHOLD ?? '0.8';
 
   return (
@@ -37,7 +37,7 @@ export default function SettingsPage(): React.JSX.Element {
             <Label>Workspace name</Label>
             <MonoCopyBlock value={workspaceName} ariaLabel="Workspace name" />
             <p className="text-xs text-muted-foreground">
-              Edit via <code className="font-mono">agentwatch admin set-workspace-name</code> (CLI
+              Edit via <code className="font-mono">linearwatch admin set-workspace-name</code> (CLI
               parity in P2).
             </p>
           </div>

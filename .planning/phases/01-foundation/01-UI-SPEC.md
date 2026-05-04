@@ -25,10 +25,10 @@ created: 2026-05-03
 | Icon library | `lucide-react` (shadcn default) |
 | Font (UI) | Inter (variable) via `next/font/google` — fallback `system-ui, -apple-system, "Segoe UI", Roboto, sans-serif` |
 | Font (mono) | JetBrains Mono (variable) via `next/font/google` — fallback `ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace` |
-| Theme | Light + dark; default = `prefers-color-scheme: system`. Theme persisted in `localStorage` key `agentwatch-theme`. Toggle in top-right of nav. |
+| Theme | Light + dark; default = `prefers-color-scheme: system`. Theme persisted in `localStorage` key `linearwatch-theme`. Toggle in top-right of nav. |
 | Charting | shadcn/ui Chart wrappers (built atop Recharts). If a needed chart shape is missing from shadcn/ui Chart, drop to Recharts directly using the same theme tokens. |
 | State | URL-stateful filters via `next/navigation` `useSearchParams` + server-component rerender. No client-side Zustand/Redux in P1. |
-| Data layer | Single typed client `@agentwatch/web/lib/query.ts` wrapping `POST /api/v1/query`. Inputs typed against `MetricName`/`DimensionName` Zod enums from `packages/shared`. **No React component imports `pg`, Drizzle, or any DB client.** (DASH-01, API-07 enforcement.) |
+| Data layer | Single typed client `@linearwatch/web/lib/query.ts` wrapping `POST /api/v1/query`. Inputs typed against `MetricName`/`DimensionName` Zod enums from `packages/shared`. **No React component imports `pg`, Drizzle, or any DB client.** (DASH-01, API-07 enforcement.) |
 
 ---
 
@@ -160,7 +160,7 @@ All copy below is **exact strings** unless marked "≈" (paraphraseable). No emo
 
 | Element | Copy |
 |---------|------|
-| Product name (top-left) | `agentwatch` (lowercase, mono, 14px, `--foreground`) |
+| Product name (top-left) | `linearwatch` (lowercase, mono, 14px, `--foreground`) |
 | Nav tab — Cost | `Cost` (active in P1) |
 | Nav tab — Reliability | `Reliability` (muted; clickable; renders P2 stub page) |
 | Nav tab — Lineage | `Lineage` (muted; clickable; renders P2 stub page) |
@@ -228,7 +228,7 @@ The wizard is a single-page flow at `/setup`. Step indicator across the top: 7 d
 
 | Element | Copy |
 |---------|------|
-| Heading (Display 28px) | `Welcome to agentwatch.` |
+| Heading (Display 28px) | `Welcome to linearwatch.` |
 | Body | `This wizard takes about 4 minutes. You'll connect your Linear workspace, optionally a GitHub PAT (used in Phase 2), and generate a workspace API key. We'll then either seed synthetic data or wait for your first real webhook.` |
 | Sub-heading | `System check` |
 | Check rows | `Postgres reachable`, `Migrations applied`, `Webhook receiver listening on /webhooks/linear` — each renders a green check (the only place green appears, used as a checkmark icon, not a fill — Lucide `check` glyph in `--foreground`) or a red `X` with the failing detail in mono below. |
@@ -254,7 +254,7 @@ This is the **highest-stakes UX moment in Phase 1**. Render as a full-screen mod
 | Element | Copy |
 |---------|------|
 | Heading | `Connect your Linear workspace.` |
-| Body | `agentwatch needs OAuth access with the AgentSession scope to receive agent activity webhooks. We never store issue titles in plaintext — they are hashed at the type level (see Settings → Privacy).` |
+| Body | `linearwatch needs OAuth access with the AgentSession scope to receive agent activity webhooks. We never store issue titles in plaintext — they are hashed at the type level (see Settings → Privacy).` |
 | Primary CTA | `Connect Linear` (opens Linear OAuth in a new tab; popup-blocker fallback note: `If nothing opens, your browser blocked the popup — copy this URL: {url}`) |
 | Connected state body | `Connected to {workspace name}.` (mono workspace name) |
 | Error body | `Linear rejected the OAuth callback. Check that LINEAR_CLIENT_ID and LINEAR_CLIENT_SECRET are set correctly in your environment, then retry.` |
@@ -281,7 +281,7 @@ This is the **highest-stakes UX moment in Phase 1**. Render as a full-screen mod
 | Generate CTA | `Generate workspace API key` |
 | API key reveal heading | `Your workspace API key` |
 | API key body (above the key) | `Copy this now. It will not be shown again. If you lose it, regenerate from Settings — every existing SDK and CLI client will need the new key.` |
-| API key block | `agw_{32-byte base64url}` rendered in 14px JetBrains Mono inside `bg-muted` rounded block with a `Copy` button on the right. A `Mask`/`Reveal` toggle (eye icon) lets the user blank the key for screen-shareable scenarios. The key starts revealed (the user just generated it). |
+| API key block | `lw_{32-byte base64url}` rendered in 14px JetBrains Mono inside `bg-muted` rounded block with a `Copy` button on the right. A `Mask`/`Reveal` toggle (eye icon) lets the user blank the key for screen-shareable scenarios. The key starts revealed (the user just generated it). |
 | Acknowledgement checkbox | `I've copied the key and stored it somewhere safe.` (must be checked before Continue) |
 | Primary CTA | `Continue` |
 
@@ -290,7 +290,7 @@ This is the **highest-stakes UX moment in Phase 1**. Render as a full-screen mod
 | Element | Copy |
 |---------|------|
 | Heading | `Want to see the dashboard with synthetic data?` |
-| Body | `Inserts ~50 demo sessions across 14 days, 3 fake agents (cursor-demo, devin-demo, internal-bot-demo), and 2 teams. The dashboard shows a persistent banner so you don't accidentally screenshot demo data. Clear at any time with` <code class="font-mono">agentwatch admin clear-seed</code>. |
+| Body | `Inserts ~50 demo sessions across 14 days, 3 fake agents (cursor-demo, devin-demo, internal-bot-demo), and 2 teams. The dashboard shows a persistent banner so you don't accidentally screenshot demo data. Clear at any time with` <code class="font-mono">linearwatch admin clear-seed</code>. |
 | Primary CTA | `Try with synthetic data` |
 | Secondary CTA | `Wait for real webhooks` |
 
@@ -327,7 +327,7 @@ Pinned to the top of the cost dashboard, below the nav, above the filter bar. Fu
 | Element | Copy |
 |---------|------|
 | Visual | `bg-warning/10 border-l-4 border-warning text-foreground` block, 12px (sm) padding, with a Lucide `flask-conical` icon at left. |
-| Text (exact) | `Synthetic data — clear via` <code class="font-mono">agentwatch admin clear-seed</code> |
+| Text (exact) | `Synthetic data — clear via` <code class="font-mono">linearwatch admin clear-seed</code> |
 
 ### Workspace warnings banner (D-18 — shared OAuth heuristic)
 
@@ -349,12 +349,12 @@ Single page at `/settings`. Three sections, each rendered in its own card with 1
 | Element | Copy |
 |---------|------|
 | Section heading | `Workspace` |
-| Workspace name field | Read-only display in mono. Edit via `agentwatch admin set-workspace-name` (CLI parity in P2). |
+| Workspace name field | Read-only display in mono. Edit via `linearwatch admin set-workspace-name` (CLI parity in P2). |
 | Sub-heading | `API key` |
 | Body | `Regenerating revokes your current key. Every running SDK or CLI client will fail until they're updated with the new key.` |
 | CTA | `Regenerate API key` (destructive variant — red border, `--foreground` text in light mode; opens confirm modal) |
 | Confirm modal heading | `Regenerate workspace API key?` |
-| Confirm modal body | `This revokes` <code class="font-mono">agw_…</code> `immediately. Existing SDK and CLI clients will return 401 until they're updated. There is no undo.` |
+| Confirm modal body | `This revokes` <code class="font-mono">lw_…</code> `immediately. Existing SDK and CLI clients will return 401 until they're updated. There is no undo.` |
 | Confirm modal primary CTA | `Yes, regenerate` (destructive fill) |
 | Confirm modal secondary CTA | `Cancel` |
 | New-key reveal | Identical pattern to wizard Step 5 — one-time, masked toggle, copy button, ack checkbox before close. |
@@ -430,7 +430,7 @@ The cost dashboard reads filters from the URL on every render. State lives in `?
 
 - Default to `prefers-color-scheme: system`.
 - Toggle in nav cycles `system → light → dark → system`.
-- Persisted in `localStorage["agentwatch-theme"]`.
+- Persisted in `localStorage["linearwatch-theme"]`.
 - Server-side rendered with the `next-themes` `<ThemeProvider attribute="class">` pattern; suppress hydration warning on the `<html>` tag.
 
 ---
@@ -498,7 +498,7 @@ If a future P1 task needs a block outside this list, it must be added through th
 | AgentSession warning verbatim copy | CONTEXT.md D-13 | verbatim |
 | "I've notified my team" click-through gate | CONTEXT.md D-13 | locked |
 | Workspace API key one-time reveal pattern | CONTEXT.md D-14 | locked |
-| Seed offer + cleared via `agentwatch admin clear-seed` | CONTEXT.md D-07 + `<specifics>` | locked |
+| Seed offer + cleared via `linearwatch admin clear-seed` | CONTEXT.md D-07 + `<specifics>` | locked |
 | Synthetic-data banner copy | CONTEXT.md `<specifics>` + objective | exact string |
 | Workspace warnings banner driven by `workspace_warnings` table | CONTEXT.md D-18 | locked |
 | `IDENTITY_CONFIDENCE_THRESHOLD` shown in Settings | CONTEXT.md D-16 + ID-06 | locked |

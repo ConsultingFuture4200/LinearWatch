@@ -38,7 +38,7 @@ export default async function DashboardLayout({
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="mx-auto flex h-14 max-w-screen-2xl items-center gap-6 px-6">
           <Link href="/cost" className="font-mono text-sm text-foreground">
-            agentwatch
+            linearwatch
           </Link>
           <div className="flex-1">
             <NavTabs />

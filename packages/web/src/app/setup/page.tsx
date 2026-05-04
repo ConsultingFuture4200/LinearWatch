@@ -15,7 +15,7 @@ import { redirect } from 'next/navigation';
  * served by the web container which depends on the server being up); a
  * deeper /health probe is over-engineering for P1.
  */
-const HEADING = 'Welcome to agentwatch.';
+const HEADING = 'Welcome to linearwatch.';
 const BODY =
   "This wizard takes about 4 minutes. You'll connect your Linear workspace, optionally a GitHub PAT (used in Phase 2), and generate a workspace API key. We'll then either seed synthetic data or wait for your first real webhook.";
 

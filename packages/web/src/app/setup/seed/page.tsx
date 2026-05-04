@@ -22,7 +22,7 @@ export default function SeedOfferPage(): React.JSX.Element {
           Inserts ~50 demo sessions across 14 days, 3 fake agents (cursor-demo, devin-demo,
           internal-bot-demo), and 2 teams. The dashboard shows a persistent banner so you don't
           accidentally screenshot demo data. Clear at any time with{' '}
-          <code className="font-mono">agentwatch admin clear-seed</code>.
+          <code className="font-mono">linearwatch admin clear-seed</code>.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-4">

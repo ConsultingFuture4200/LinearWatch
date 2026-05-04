@@ -28,8 +28,8 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_shared');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_shared');
 const WS = '00000000-0000-4000-8000-000000000001';
 
 async function adminReachable(): Promise<boolean> {
@@ -57,8 +57,8 @@ describe.skipIf(!dbReachable)('detect_shared_app (D-18, ID-05, Pitfall 6)', () =
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_shared');
-    await admin.query('CREATE DATABASE agentwatch_shared');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_shared');
+    await admin.query('CREATE DATABASE linearwatch_shared');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { hashTitle } from '@agentwatch/shared';
+import { hashTitle } from '@linearwatch/shared';
 import { sql } from 'drizzle-orm';
 import type { ServerDb } from '../db.js';
 
@@ -12,7 +12,7 @@ import type { ServerDb } from '../db.js';
  * states. One day is intentionally an anomaly (>3x rolling avg).
  *
  * Pitfall 13: every issue title flows through `hashTitle()` from
- * `@agentwatch/shared` — there is NO `title` column on `issues`.
+ * `@linearwatch/shared` — there is NO `title` column on `issues`.
  *
  * Idempotent: if a `*-demo` agent already exists for the workspace,
  * returns `{ inserted: 0 }` without re-seeding. The wizard's seed step
@@ -166,7 +166,7 @@ export async function insertSyntheticData(
 
 /**
  * Hard-delete every demo row in the workspace. Used by
- * `POST /api/v1/admin/clear-seed` and the future `agentwatch admin clear-seed`
+ * `POST /api/v1/admin/clear-seed` and the future `linearwatch admin clear-seed`
  * CLI command (P2). Demo rows are synthetic; we don't soft-delete.
  *
  * Order: agent_sessions → identity_mappings → issues → agents → cycles → teams,

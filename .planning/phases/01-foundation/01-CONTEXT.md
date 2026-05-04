@@ -7,7 +7,7 @@
 <domain>
 ## Phase Boundary
 
-Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct Postgres schema, an idempotent Linear webhook receiver, identity resolver v0 (Linear-only), the constrained query API skeleton, a cost dashboard view that consumes the API, and a `agentwatch setup` first-run wizard. **All 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` must be eliminated in this phase** because every one of them is a Day-1 schema or handler decision that cannot be retrofitted on a live table without truncate-and-replay.
+Phase 1 delivers the **non-retrofittable foundation** for linearwatch: a correct Postgres schema, an idempotent Linear webhook receiver, identity resolver v0 (Linear-only), the constrained query API skeleton, a cost dashboard view that consumes the API, and a `linearwatch setup` first-run wizard. **All 8 CRITICAL pitfalls from `.planning/research/PITFALLS.md` must be eliminated in this phase** because every one of them is a Day-1 schema or handler decision that cannot be retrofitted on a live table without truncate-and-replay.
 
 **In scope:**
 - Postgres schema (star: `agent_sessions` fact + `agents`/`issues`/`repos`/`teams`/`cycles` dims), `events.raw_event` with **monthly declarative partitioning** from the first migration, `identity_mappings`, `cost_by_agent_daily` rollup table (refresh stub OK; rollup population is P2), `alert_events` table reserved.
@@ -17,7 +17,7 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 - Query API: `POST /api/v1/query` with Zod-enumerated `MetricName` and `DimensionName`; metrics shipped: `cost_by_agent`, `agent_session_count`; dimensions shipped: `agent`, `team`, `cycle`.
 - Internal SDK endpoint (`POST /api/v1/sdk/event`) with Bearer workspace API key — accepts the three event types but does not need a published SDK package in P1 (SDK packages are P2).
 - Cost dashboard view (Next.js App Router) reading exclusively through query API.
-- `agentwatch setup` wizard (dashboard-first; CLI parity in P2 is fine — see decisions): Linear OAuth, GitHub PAT (collected but unused until P2), AgentSession UI visibility warning, `--seed` flag for synthetic data.
+- `linearwatch setup` wizard (dashboard-first; CLI parity in P2 is fine — see decisions): Linear OAuth, GitHub PAT (collected but unused until P2), AgentSession UI visibility warning, `--seed` flag for synthetic data.
 - Privacy: `hashTitle()` utility and ORM-level enforcement that `issues` has no `title: string` field.
 - Observability: pino structured logs, Prometheus `/metrics` with event count, queue depth, enrichment lag (stubbed, populated in P2), `identity_resolver_confidence` histogram, fail-fast env-var validation at startup.
 - Docker Compose: `web` + `worker` + `postgres:16-alpine`; `docker compose up` reaches dashboard within 5 minutes.
@@ -28,8 +28,8 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 - Vendor API enrichment workers (P2 — INGEST-07/08)
 - GitHub PR outcome enrichment / `outcome` column population (P2 — INGEST-09)
 - Cross-source resolver signals (`github_login`, `vendor_session_pattern`) — P2 (ID-04)
-- CLI binary (P2) — only the SDK endpoint exists in P1; the `agentwatch` CLI itself ships in P2
-- SDK packages (`@agentwatch/sdk`, PyPI `agentwatch`) — P2; the **endpoint** is in P1, the **packages** are not
+- CLI binary (P2) — only the SDK endpoint exists in P1; the `linearwatch` CLI itself ships in P2
+- SDK packages (`@linearwatch/sdk`, PyPI `linearwatch`) — P2; the **endpoint** is in P1, the **packages** are not
 - Reliability + Lineage dashboard views (P2 — DASH-02/03)
 - Alert engine (P2 — ALERT-01..07)
 - Helm chart, telemetry pipeline, docs site — P3
@@ -51,7 +51,7 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 ### Migration & Seed Strategy
 - **D-05:** Use **drizzle-kit `generate`** to produce SQL migration files checked into `migrations/`; **drizzle-kit `migrate`** runs at app startup before the server starts accepting connections. Migrations are SQL files, not TypeScript — easier to audit and replay manually if a startup migration fails. (Auto-recommended over runtime migration libraries because self-hosters expect to read SQL.)
 - **D-06:** `events.raw_event` partitioning is created **in the very first migration** as `PARTITION BY RANGE (received_at)`, with the current month's partition + the next month's partition pre-created. A Graphile cron job `rotate_raw_event_partitions` (registered in P1, scheduled monthly) creates next-month partitions and `DROP PARTITION`s anything older than 30 days. (Pitfall 8.)
-- **D-07:** `--seed` flag inserts **~50 synthetic agent sessions** spanning 14 days, 3 fake agents (with names suggestive of real vendors but clearly synthetic — e.g., `cursor-demo`, `devin-demo`, `internal-bot-demo`), 2 teams, 1 cycle, distributed across cost buckets so the cost dashboard renders all states (high spend, low spend, anomaly highlight). Seed runs via `agentwatch setup --seed` and via a `worker` one-shot job for the docker-compose `--seed` env var path. **Synthetic data is clearly labelled in the dashboard with a "synthetic data — remove via `agentwatch admin clear-seed`" banner** when seed rows exist.
+- **D-07:** `--seed` flag inserts **~50 synthetic agent sessions** spanning 14 days, 3 fake agents (with names suggestive of real vendors but clearly synthetic — e.g., `cursor-demo`, `devin-demo`, `internal-bot-demo`), 2 teams, 1 cycle, distributed across cost buckets so the cost dashboard renders all states (high spend, low spend, anomaly highlight). Seed runs via `linearwatch setup --seed` and via a `worker` one-shot job for the docker-compose `--seed` env var path. **Synthetic data is clearly labelled in the dashboard with a "synthetic data — remove via `linearwatch admin clear-seed`" banner** when seed rows exist.
 
 ### Webhook Idempotency
 - **D-08:** Idempotency key for Linear is the **`Linear-Delivery` UUID** from the webhook header, stored as `events.raw_event.upstream_id` with unique constraint `(source, upstream_id)`. (Pitfall 1; research SUMMARY.md §Cross-Cutting Decisions row 2.)
@@ -59,10 +59,10 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 - **D-10:** Idempotency for the SDK endpoint (`POST /api/v1/sdk/event`) requires the caller to supply an `idempotency_key` in the request body; if absent, the server synthesizes `sha256(workspace_id + session_id + event_type + minute_bucket(occurred_at))`. SDK clients (P2) supply explicit keys.
 
 ### Setup Wizard Surface & Flow
-- **D-11:** **Dashboard-first** wizard in P1. The CLI `agentwatch setup` command exists as a thin shell that prints a docker-compose-up message and the URL to the dashboard wizard for P1; full CLI-parity setup (SETUP-04 / CLI-07) ships in P2 alongside the CLI binary. This is consistent with the research note that CLI is P2 (FEATURES.md "Must-have" lists CLI commands but ARCHITECTURE.md build order puts the binary in P2).
+- **D-11:** **Dashboard-first** wizard in P1. The CLI `linearwatch setup` command exists as a thin shell that prints a docker-compose-up message and the URL to the dashboard wizard for P1; full CLI-parity setup (SETUP-04 / CLI-07) ships in P2 alongside the CLI binary. This is consistent with the research note that CLI is P2 (FEATURES.md "Must-have" lists CLI commands but ARCHITECTURE.md build order puts the binary in P2).
 - **D-12:** Wizard step order: (1) Welcome + system requirements check, (2) **AgentSession visibility warning** (full-screen modal with copy from D-13), (3) Linear OAuth flow, (4) GitHub PAT input (optional, marked "needed in Phase 2 for PR enrichment"), (5) Workspace name + initial workspace API key generation (one-click "generate and copy"), (6) `--seed` offer ("Try with synthetic data" / "Wait for real webhooks"), (7) Done — copy/paste webhook URL + cURL test command.
 - **D-13:** AgentSession UI warning copy (load-bearing for SETUP-02): "**Heads up: enabling Linear's AgentSession category modifies the workspace UI for every member of your Linear workspace, not just you.** Linear shows agent activity in a dedicated UI category once an OAuth app with AgentSession scope is approved. If your team has not been told to expect this, pause and notify them before continuing." User must click "I've notified my team" before the OAuth flow proceeds. (Verbatim copy is starting point — refine with design partners in P2.)
-- **D-14:** Workspace API keys are generated as `agw_` + 32 bytes base64url; stored hashed (sha256) in `workspaces.api_key_hash`; the wizard displays the plaintext key **once** with a clear "save this — it will not be shown again" affordance. CLI/SDK auth uses Bearer token compared via constant-time HMAC.
+- **D-14:** Workspace API keys are generated as `lw_` + 32 bytes base64url; stored hashed (sha256) in `workspaces.api_key_hash`; the wizard displays the plaintext key **once** with a clear "save this — it will not be shown again" affordance. CLI/SDK auth uses Bearer token compared via constant-time HMAC.
 
 ### Identity Resolver Execution Model
 - **D-15:** Resolver runs **asynchronously as a Graphile Worker `resolve_identity` job**, enqueued from the webhook handler after the raw INSERT. **Not** synchronous in the handler (would violate D-04). Job is **idempotent** on `(workspace_id, raw_event_id)`: re-running the resolver on the same raw event produces the same output row in `identity_mappings`.
@@ -79,7 +79,7 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 - **D-22:** Tabs for Reliability and Lineage exist as **stubs that say "Available in Phase 2"** with a link to ROADMAP.md. This makes the navigation in P2 a non-event — the slots are pre-cut.
 
 ### Local Dev Workflow
-- **D-23:** **Hybrid recommended for contributors**: `docker compose up postgres` for the DB, then `pnpm --filter @agentwatch/server dev` and `pnpm --filter @agentwatch/worker dev` on the host for hot-reload. The full `docker compose up` is for **users** doing the 5-minute install — it must work, and CI tests it (DEPLOY-01, LAUNCH-06), but it is not the inner loop for contributors. Document both in `CONTRIBUTING.md` (a P3 deliverable, but at least mention in README in P1).
+- **D-23:** **Hybrid recommended for contributors**: `docker compose up postgres` for the DB, then `pnpm --filter @linearwatch/server dev` and `pnpm --filter @linearwatch/worker dev` on the host for hot-reload. The full `docker compose up` is for **users** doing the 5-minute install — it must work, and CI tests it (DEPLOY-01, LAUNCH-06), but it is not the inner loop for contributors. Document both in `CONTRIBUTING.md` (a P3 deliverable, but at least mention in README in P1).
 - **D-24:** All env vars in `.env.example` at repo root. App fails fast at startup if `LINEAR_CLIENT_ID`, `LINEAR_CLIENT_SECRET`, or `DATABASE_URL` are missing (DEPLOY-03), printing a single readable line per missing var.
 
 ### Monorepo Layout (Phase 1 packages only)
@@ -97,7 +97,7 @@ Phase 1 delivers the **non-retrofittable foundation** for agentwatch: a correct 
 
 ### Observability (Pitfall 5)
 - **D-29:** pino logger configured to **never log `req.body`**. Webhook handler emits exactly one log line per receipt with these fields only: `delivery_id`, `source`, `event_type`, `bytes_received`, `latency_ms`. `LOG_LEVEL=debug` adds `payload_keys: string[]` (top-level keys only, never values). Implementation: a custom Fastify request logger plugin replaces the default.
-- **D-30:** `/metrics` exposes: `agentwatch_events_received_total{source}` (counter), `agentwatch_webhook_ack_seconds` (histogram), `agentwatch_jobs_queue_depth{job_name}` (gauge, populated by Graphile Worker integration), `agentwatch_identity_resolver_confidence` (histogram, observed every resolve), `agentwatch_enrichment_lag_seconds{source}` (gauge, stub returning 0 in P1; P2 worker populates).
+- **D-30:** `/metrics` exposes: `linearwatch_events_received_total{source}` (counter), `linearwatch_webhook_ack_seconds` (histogram), `linearwatch_jobs_queue_depth{job_name}` (gauge, populated by Graphile Worker integration), `linearwatch_identity_resolver_confidence` (histogram, observed every resolve), `linearwatch_enrichment_lag_seconds{source}` (gauge, stub returning 0 in P1; P2 worker populates).
 
 ### Performance Verification (Pitfall — INGEST-04 / API-08 are deferrable to P2 OBS-05 benchmark, but design must support them in P1)
 - **D-31:** P1 includes a **smoke benchmark** at `packages/server/test/perf/webhook-ack.bench.ts` that fires 200 concurrent valid Linear webhooks against a local server with `postgres:16-alpine` and asserts p99 < 200ms. This runs in CI as a gate on the foundation phase. Full 100k-row dashboard query benchmark is P2 (OBS-05).
@@ -208,8 +208,8 @@ None. No pre-existing todos matched Phase 1 scope (project is at initialization)
 These came up during analysis but belong to other phases. Captured so they aren't lost.
 
 ### Belongs in Phase 2
-- **CLI binary `agentwatch`** with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` commands (CLI-01..09). P1 ships only the SDK endpoint and a placeholder `agentwatch` binary that prints "use the dashboard wizard at http://localhost:3000".
-- **Published SDK packages** `@agentwatch/sdk` (Node) and `agentwatch` (PyPI). The endpoint is in P1 (INGEST-03); the published packages are P2 (SDK-01..06).
+- **CLI binary `linearwatch`** with `query`, `report`, `lineage`, `tail`, `rules test`, `setup` commands (CLI-01..09). P1 ships only the SDK endpoint and a placeholder `linearwatch` binary that prints "use the dashboard wizard at http://localhost:3000".
+- **Published SDK packages** `@linearwatch/sdk` (Node) and `linearwatch` (PyPI). The endpoint is in P1 (INGEST-03); the published packages are P2 (SDK-01..06).
 - **GitHub webhook receiver** with `X-Hub-Signature-256` enforcement (INGEST-02). The pattern is established in P1 (Linear), so P2 reuses the same constant-time-compare helper.
 - **Vendor API enrichment** for Cursor + one other vendor (INGEST-07/08). Mid-P2 vendor-doc check is research-flagged.
 - **`outcome` column population** via GitHub PR merge/revert/force-push detection (INGEST-09). The column exists in the P1 schema but is NULL until P2.

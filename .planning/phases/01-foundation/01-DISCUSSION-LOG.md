@@ -59,7 +59,7 @@
 
 | Option | Description | Selected |
 |--------|-------------|----------|
-| Dashboard-first wizard; CLI `agentwatch setup` is a stub redirecting to dashboard URL in P1 | CLI ships in P2 anyway; dashboard already exists in P1 | ✓ |
+| Dashboard-first wizard; CLI `linearwatch setup` is a stub redirecting to dashboard URL in P1 | CLI ships in P2 anyway; dashboard already exists in P1 | ✓ |
 | CLI-first; dashboard wizard mirrors it | CLI binary doesn't ship until P2 — chicken-and-egg | |
 | Both at parity in P1 | Doubles surface for a P1 build | |
 
@@ -116,7 +116,7 @@
 | Separate keys for query vs SDK | Premature complexity for single-tenant v0 | |
 | Use OAuth token directly for everything | Mixes user identity with machine identity | |
 
-**Auto-selected:** Single workspace key (`agw_` + 32 bytes base64url, sha256-hashed at rest, displayed once at generation).
+**Auto-selected:** Single workspace key (`lw_` + 32 bytes base64url, sha256-hashed at rest, displayed once at generation).
 
 ---
 

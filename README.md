@@ -2,15 +2,15 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="LOGO_DARK_URL">
     <source media="(prefers-color-scheme: light)" srcset="LOGO_LIGHT_URL">
-    <img alt="agentwatch" src="LOGO_LIGHT_URL" width="400">
+    <img alt="linearwatch" src="LOGO_LIGHT_URL" width="400">
   </picture>
 </p>
 <!-- TODO: Replace LOGO_DARK_URL and LOGO_LIGHT_URL, or remove the <picture> block and use a text header -->
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License"></a>
-  <a href="RELEASES_URL"><img src="https://img.shields.io/github/v/release/YOUR_USERNAME/agentwatch?style=flat-square" alt="Release"></a>
-  <a href="CI_URL"><img src="https://img.shields.io/github/actions/workflow/status/YOUR_USERNAME/agentwatch/ci.yml?style=flat-square" alt="CI"></a>
+  <a href="RELEASES_URL"><img src="https://img.shields.io/github/v/release/YOUR_USERNAME/linearwatch?style=flat-square" alt="Release"></a>
+  <a href="CI_URL"><img src="https://img.shields.io/github/actions/workflow/status/YOUR_USERNAME/linearwatch/ci.yml?style=flat-square" alt="CI"></a>
   <a href="DISCORD_URL"><img src="https://img.shields.io/discord/DISCORD_SERVER_ID?style=flat-square&logo=discord&logoColor=white&label=discord" alt="Discord"></a>
 </p>
 
@@ -19,15 +19,15 @@
 ---
 
 <p align="center">
-  <img src="DASHBOARD_SCREENSHOT_URL" alt="agentwatch dashboard" width="700">
+  <img src="DASHBOARD_SCREENSHOT_URL" alt="linearwatch dashboard" width="700">
 </p>
 <!-- TODO: Replace DASHBOARD_SCREENSHOT_URL with a real screenshot or GIF of the dashboard -->
 
-## Why agentwatch
+## Why linearwatch
 
 Cursor, Devin, Codex, Sentry's Seer, and your own internal agents are all working tickets in Linear. Each vendor shows you their own session log. Linear shows you the comment thread. Nobody shows you the cross-agent view: what every agent did this week, what it cost, what worked, and what got reverted three days later.
 
-agentwatch is the observability layer for that mess. Self-hosted, Postgres-only, one Docker compose command to run.
+linearwatch is the observability layer for that mess. Self-hosted, Postgres-only, one Docker compose command to run.
 
 ## Features
 
@@ -42,7 +42,7 @@ agentwatch is the observability layer for that mess. Self-hosted, Postgres-only,
 
 ```mermaid
 ---
-title: agentwatch architecture
+title: linearwatch architecture
 ---
 flowchart LR
     L[Linear] --> R[Webhook receiver]
@@ -65,8 +65,8 @@ Linear webhooks (Agent Session events) are the spine. GitHub provides the outcom
 > Requires Docker 24+ and a Linear workspace on the Business or Enterprise plan (for Agent Session webhook access).
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/agentwatch.git
-cd agentwatch
+git clone https://github.com/YOUR_USERNAME/linearwatch.git
+cd linearwatch
 cp .env.example .env
 # edit .env with your Linear OAuth credentials and GitHub PAT
 docker compose up -d
@@ -82,7 +82,7 @@ Open `http://localhost:3000` and complete the workspace setup wizard. First data
 <table>
   <tr><th>Method</th><th>Best for</th><th>Command</th></tr>
   <tr><td>Docker Compose</td><td>Most users</td><td><code>docker compose up -d</code></td></tr>
-  <tr><td>Helm chart</td><td>Kubernetes</td><td><code>helm install agentwatch agentwatch/agentwatch</code></td></tr>
+  <tr><td>Helm chart</td><td>Kubernetes</td><td><code>helm install linearwatch linearwatch/linearwatch</code></td></tr>
   <tr><td>From source</td><td>Contributors</td><td><code>pnpm install && pnpm dev</code></td></tr>
 </table>
 
@@ -115,16 +115,16 @@ See [docs/configuration.md](docs/configuration.md) for the complete list, includ
 
 ```bash
 # Cost per agent over the last cycle
-agentwatch query "spend by agent last 14d"
+linearwatch query "spend by agent last 14d"
 
 # Reliability snapshot
-agentwatch report reliability --team ENG
+linearwatch report reliability --team ENG
 
 # Lineage for a specific issue
-agentwatch lineage LIN-1234
+linearwatch lineage LIN-1234
 
 # Tail live agent activity
-agentwatch tail
+linearwatch tail
 ```
 
 ### Dashboard
@@ -153,7 +153,7 @@ notify:
 > [!NOTE]
 > Telemetry is **off by default** and customer data never leaves your instance.
 
-If you opt in via `TELEMETRY_OPT_IN=true`, agentwatch sends only the following to a separate hosted aggregator: agent name, anonymized cost bucket, success/fail outcome, and model tier. No issue content, no code, no identifiers. The opt-in dataset powers the public benchmark at [BENCHMARK_URL](BENCHMARK_URL). See [docs/telemetry.md](docs/telemetry.md) for the full schema.
+If you opt in via `TELEMETRY_OPT_IN=true`, linearwatch sends only the following to a separate hosted aggregator: agent name, anonymized cost bucket, success/fail outcome, and model tier. No issue content, no code, no identifiers. The opt-in dataset powers the public benchmark at [BENCHMARK_URL](BENCHMARK_URL). See [docs/telemetry.md](docs/telemetry.md) for the full schema.
 
 ## Roadmap
 
@@ -171,14 +171,14 @@ If you opt in via `TELEMETRY_OPT_IN=true`, agentwatch sends only the following t
 <details>
 <summary>How is this different from what Linear ships natively?</summary>
 
-Linear's Triage Intelligence and Linear Agent are excellent at *operating inside Linear*. agentwatch operates *across* the agent stack — it correlates Linear events with GitHub outcomes and vendor cost data into a single agent identity. Linear has structural reasons to favor its own agent; agentwatch is vendor-neutral by design.
+Linear's Triage Intelligence and Linear Agent are excellent at *operating inside Linear*. linearwatch operates *across* the agent stack — it correlates Linear events with GitHub outcomes and vendor cost data into a single agent identity. Linear has structural reasons to favor its own agent; linearwatch is vendor-neutral by design.
 
 </details>
 
 <details>
 <summary>Will this work with internal / homegrown agents?</summary>
 
-Yes. The `@agentwatch/sdk` package emits cost, duration, and outcome events from any agent runtime. See [docs/sdk.md](docs/sdk.md).
+Yes. The `@linearwatch/sdk` package emits cost, duration, and outcome events from any agent runtime. See [docs/sdk.md](docs/sdk.md).
 
 </details>
 

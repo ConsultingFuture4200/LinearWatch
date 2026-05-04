@@ -18,8 +18,8 @@ const MIGRATIONS_FOLDER = resolve(__dirname, '..', '..', '..', 'db', 'migrations
 
 const BASE_URL =
   process.env.DATABASE_URL_TEST ??
-  'postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres';
-const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/agentwatch_setup');
+  'postgres://linearwatch:linearwatch_dev_password@localhost:5432/postgres';
+const TEST_DB_URL = BASE_URL.replace(/\/[^/]+$/, '/linearwatch_setup');
 
 async function adminReachable(): Promise<boolean> {
   const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
@@ -58,8 +58,8 @@ describe.skipIf(!dbReachable)('Setup wizard endpoints', () => {
   beforeAll(async () => {
     const adminUrl = TEST_DB_URL.replace(/\/[^/]+$/, '/postgres');
     const admin = new Pool({ connectionString: adminUrl });
-    await admin.query('DROP DATABASE IF EXISTS agentwatch_setup');
-    await admin.query('CREATE DATABASE agentwatch_setup');
+    await admin.query('DROP DATABASE IF EXISTS linearwatch_setup');
+    await admin.query('CREATE DATABASE linearwatch_setup');
     await admin.end();
 
     pool = new Pool({ connectionString: TEST_DB_URL });
@@ -113,7 +113,7 @@ describe.skipIf(!dbReachable)('Setup wizard endpoints', () => {
       expect(r.statusCode).toBe(400);
     });
 
-    it('returns plaintext_api_key matching agw_<base64url> + sha256 stored', async () => {
+    it('returns plaintext_api_key matching lw_<base64url> + sha256 stored', async () => {
       const app = await makeApp(db);
       const r = await app.inject({
         method: 'POST',
@@ -123,7 +123,7 @@ describe.skipIf(!dbReachable)('Setup wizard endpoints', () => {
       });
       expect(r.statusCode).toBe(200);
       const body = r.json() as { workspace_id: string; plaintext_api_key: string };
-      expect(body.plaintext_api_key).toMatch(/^agw_[A-Za-z0-9_-]+$/);
+      expect(body.plaintext_api_key).toMatch(/^lw_[A-Za-z0-9_-]+$/);
       // Verify hash matches what's persisted.
       const expectedHash = createHash('sha256').update(body.plaintext_api_key).digest('hex');
       const row = await pool.query(

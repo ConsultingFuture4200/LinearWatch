@@ -11,7 +11,7 @@ trap cleanup EXIT
 export LINEAR_CLIENT_ID="smoke-client"
 export LINEAR_CLIENT_SECRET="smoke-secret"
 export LINEAR_WEBHOOK_SECRET="smoke-webhook-secret"
-export AGENTWATCH_INTERNAL_API_KEY="smoke-internal-key"
+export LINEARWATCH_INTERNAL_API_KEY="smoke-internal-key"
 
 docker compose up --build -d
 

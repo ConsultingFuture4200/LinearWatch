@@ -17,12 +17,12 @@ const CURL_TEMPLATE = `curl -X POST {host}/webhooks/linear \\
   -d '{}'`;
 
 interface EmptyStateProps {
-  /** Optional public host override; defaults to AGENTWATCH_PUBLIC_URL or a placeholder. */
+  /** Optional public host override; defaults to LINEARWATCH_PUBLIC_URL or a placeholder. */
   publicHost?: string;
 }
 
 export function EmptyState({ publicHost }: EmptyStateProps = {}): React.JSX.Element {
-  const host = publicHost ?? process.env.AGENTWATCH_PUBLIC_URL ?? 'https://your-host.example';
+  const host = publicHost ?? process.env.LINEARWATCH_PUBLIC_URL ?? 'https://your-host.example';
   const webhookUrl = `${host}/webhooks/linear`;
   const curlBody = CURL_TEMPLATE.replace('{host}', host);
 

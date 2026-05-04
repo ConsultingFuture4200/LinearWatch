@@ -30,10 +30,10 @@ why_human: SC#2 is verified end-to-end with injected Fastify requests. First del
 ### 3. Setup wizard UX walkthrough (SETUP-01..04 / SC#4)
 expected: Walk the wizard at `/setup` in a browser. Step 2 modal renders verbatim D-13 copy; Escape blocked; only "I've notified my team" advances; Linear OAuth round-trips; API key reveal happens once; `--seed` populates the cost view; webhook URL + cURL block on Done step.
 result: [pending]
-why_human: Verbatim D-13 copy is asserted by 3 Playwright tests; full 7-step UX should be eyeballed once with a real Linear OAuth app to confirm hand-off between steps and `AGENTWATCH_PUBLIC_URL` placeholder substitution.
+why_human: Verbatim D-13 copy is asserted by 3 Playwright tests; full 7-step UX should be eyeballed once with a real Linear OAuth app to confirm hand-off between steps and `LINEARWATCH_PUBLIC_URL` placeholder substitution.
 
 ### 4. Production-hardware webhook benchmark (INGEST-04 / D-31)
-expected: Run `pnpm --filter @agentwatch/server bench:webhook-ack` against `postgres:16-alpine` on the target deployment hardware; p99 < 200ms with non-2xx=0 across 200 concurrent connections for 15s.
+expected: Run `pnpm --filter @linearwatch/server bench:webhook-ack` against `postgres:16-alpine` on the target deployment hardware; p99 < 200ms with non-2xx=0 across 200 concurrent connections for 15s.
 result: [pending]
 why_human: Verified locally at p99=169ms on the developer machine. The 200ms SLA has only ~30ms of headroom; production-class hardware should be measured at least once because contention characteristics differ.
 
@@ -76,7 +76,7 @@ with the source repository pnpm-installed in dev mode:
    tsx/dev/vitest, breaks at production runtime where Node loads JS directly.
    Plan 01.02 / 01.03 / 01.04 missed it. Fixed in cfa9325.
 
-4. **compose.yml worker missing LINEAR_*/AGENTWATCH_INTERNAL_API_KEY** + **env
+4. **compose.yml worker missing LINEAR_*/LINEARWATCH_INTERNAL_API_KEY** + **env
    validator rejecting empty WORKSPACE_ID** — process-global env.ts forces the
    worker to validate vars it doesn't use, and Zod's `.uuid().optional()` rejects
    empty strings. Fixed in cfa9325 + 2685c57.

@@ -1,9 +1,9 @@
-import type { Window } from '@agentwatch/shared';
+import type { Window } from '@linearwatch/shared';
 
 /**
  * Resolve a query Window into an absolute `(since, until)` pair.
  *
- * The Window schema (`@agentwatch/shared`) accepts either:
+ * The Window schema (`@linearwatch/shared`) accepts either:
  *   - `last: '14d'` / `'168h'` (relative, anchored at `now()`), OR
  *   - `from` + `to` (ISO datetimes, absolute).
  *

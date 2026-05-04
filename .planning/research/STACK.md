@@ -12,11 +12,11 @@
 
 The single most contested question. The answer is Node.js because of one hard constraint: the Node SDK is a first-class deliverable, and splitting languages across the server and the SDK creates two separate dependency trees, two CI pipelines, two contributor onboarding stories, and significant duplicated logic in the identity resolver. In a 90-day open-source project with a solo maintainer, that split is unaffordable.
 
-The performance objection does not hold at agentwatch's scale. p99 < 200ms for webhook acknowledgment is trivially achievable in Node.js with Fastify — the 200ms budget is dominated by the Postgres write (1-5ms round trip on a loopback connection), not framework overhead. Go would yield p99 around 5-15ms vs Node.js around 15-30ms for the raw HTTP path; both are well inside the 200ms SLA with 10x headroom to spare.
+The performance objection does not hold at linearwatch's scale. p99 < 200ms for webhook acknowledgment is trivially achievable in Node.js with Fastify — the 200ms budget is dominated by the Postgres write (1-5ms round trip on a loopback connection), not framework overhead. Go would yield p99 around 5-15ms vs Node.js around 15-30ms for the raw HTTP path; both are well inside the 200ms SLA with 10x headroom to spare.
 
 The single-binary CLI objection is real but solved: Bun's `--compile` flag produces a self-contained binary from TypeScript with no Node.js runtime on the target machine. Bun 1.1+ has 95-98% Node.js API compatibility and is production-deployed by Anthropic (Claude Code CLI). This gives the deployment simplicity of Go binaries without leaving the TypeScript ecosystem.
 
-Go would be the right call if: (a) agentwatch ever needs sub-10ms p99 at 50k RPS, or (b) a Go-native design partner wants to contribute. Neither applies in v0.
+Go would be the right call if: (a) linearwatch ever needs sub-10ms p99 at 50k RPS, or (b) a Go-native design partner wants to contribute. Neither applies in v0.
 
 ---
 
@@ -30,7 +30,7 @@ Go would be the right call if: (a) agentwatch ever needs sub-10ms p99 at 50k RPS
 | TypeScript | 5.x | Language | Static types across server, CLI, and SDK — single source of truth for query API types |
 | Fastify | 5.8.x | HTTP server (webhook receiver + query API) | 2-3x faster than Express; schema-based request validation built-in; plugins for pino, cors, auth; v5 stable as of late 2024; 45-55k req/s on Node.js 22 — p99 < 200ms budget met with 10x headroom |
 | Drizzle ORM | 0.45.x (stable) | ORM + migrations | Compiles to SQL with minimal overhead; 1.15x faster than raw pg pooling; `sql` escape hatch for window functions; drizzle-kit for migration discipline; star schema with rolling-window queries is idiomatic |
-| pg-boss | 12.18.x | Background job queue (60s enrichment, 5m alert cron) | Postgres-only (no Redis/SIDEKIQ); SKIP LOCKED for exactly-once delivery; cron syntax built-in; 231k weekly downloads vs graphile-worker's 87k; simpler API for agentwatch's two job types |
+| pg-boss | 12.18.x | Background job queue (60s enrichment, 5m alert cron) | Postgres-only (no Redis/SIDEKIQ); SKIP LOCKED for exactly-once delivery; cron syntax built-in; 231k weekly downloads vs graphile-worker's 87k; simpler API for linearwatch's two job types |
 | Next.js | 15.5.x (or 16.x if stable) | Dashboard web app | App Router + RSC for server-side data fetching through query API; streaming Suspense for progressive chart rendering; shadcn/ui compatible; self-hostable via `next start` in Docker |
 | Bun | 1.x | CLI binary compilation + dev tooling | `bun build --compile` produces a truly standalone binary (no Node runtime on target); used by Anthropic for Claude Code CLI; 95-98% Node.js API compat; also faster dev server for SDK contributors |
 | pino | 9.x | Structured JSON logging | 5x faster than Winston; JSON output by default (satisfies "structured logs by default" requirement); `pino-pretty` for dev; native Fastify integration |
@@ -44,11 +44,11 @@ Go would be the right call if: (a) agentwatch ever needs sub-10ms p99 at 50k RPS
 | `@octokit/rest` | 22.x | GitHub REST API (PR outcome enrichment) | Fetching PR merge/revert/CI status in the enrichment worker |
 | `@octokit/webhooks` | latest | GitHub webhook signature verification | `webhooks.verify(body, sig)` — handles `x-hub-signature-256` HMAC-SHA256 verification; use `@octokit/webhooks-methods` for standalone verify without the event emitter |
 | `crypto` (Node built-in) | — | Linear webhook HMAC-SHA256 verification | `createHmac('sha256', secret).update(rawBody).digest('hex')` + `timingSafeEqual`; no external dep needed |
-| `commander` | 14.0.x | CLI argument parsing | 130k downstream packages; zero deps; 22ms startup vs oclif's 120ms; sufficient for agentwatch's 6-command surface; Bun compiles the whole tree |
+| `commander` | 14.0.x | CLI argument parsing | 130k downstream packages; zero deps; 22ms startup vs oclif's 120ms; sufficient for linearwatch's 6-command surface; Bun compiles the whole tree |
 | `zod` | 3.x | Runtime validation for query API inputs, YAML rule parsing | Shared between server and CLI for DSL validation; generates TypeScript types |
 | `js-yaml` | 4.x | YAML rule file parsing | Parse alert rule YAML in both server and CLI |
 | `tsup` | 8.x | SDK build (Node SDK package) | Outputs ESM + CJS + `.d.ts` in one command; used by Drizzle and other modern TS libs |
-| `changesets` | 2.x | SDK versioning and npm publish | Monorepo-aware semver bumps for `@agentwatch/sdk` package |
+| `changesets` | 2.x | SDK versioning and npm publish | Monorepo-aware semver bumps for `@linearwatch/sdk` package |
 | `httpx` (Python) | 0.27.x | Python SDK HTTP client | Async-first, mirrors Node SDK interface; both sync and async APIs |
 | `pino-http` | 10.x | HTTP request logging middleware for Fastify | Auto-logs req/res with correlation IDs |
 
@@ -59,7 +59,7 @@ Go would be the right call if: (a) agentwatch ever needs sub-10ms p99 at 50k RPS
 | pnpm workspaces | Monorepo package management | Root workspace with `packages/server`, `packages/cli`, `packages/sdk-node`, `packages/sdk-python` (Python managed separately with uv) |
 | drizzle-kit | Schema diffing and migration generation | `drizzle-kit generate` → SQL files checked into `migrations/`; `drizzle-kit migrate` applies them at startup |
 | Docker Compose | Primary distribution | `compose.yml` brings up `postgres:16-alpine` + app; single `docker compose up` in ≤5 min |
-| GoReleaser (or `bun build --compile` + GitHub Actions matrix) | CLI binary release | Build `agentwatch` binary for linux/amd64, linux/arm64, darwin/arm64; attach to GitHub releases |
+| GoReleaser (or `bun build --compile` + GitHub Actions matrix) | CLI binary release | Build `linearwatch` binary for linux/amd64, linux/arm64, darwin/arm64; attach to GitHub releases |
 | uv | Python SDK dev environment | `uv sync` for contributors; `pyproject.toml` with hatchling backend |
 
 ---
@@ -103,7 +103,7 @@ uv add httpx
 | Drizzle ORM | Prisma | Prisma 7 dropped the Rust engine but still generates a client binary and has heavier migration flow; Drizzle's `sql` escape hatch is critical for rolling-window analytics queries; Drizzle benchmarks 2x faster for simple selects |
 | Drizzle ORM | Kysely | Kysely is a query builder with no migration story; Drizzle adds schema-first migrations + ORM features without losing raw SQL access |
 | Drizzle ORM | raw SQL / sqlc | sqlc is Go-only; raw SQL loses TypeScript types on query results; Drizzle gives both typed results AND raw escape hatch |
-| pg-boss | graphile-worker | graphile-worker is excellent but lower adoption (87k vs 231k weekly downloads); pg-boss has built-in cron syntax and a simpler API for agentwatch's two job types |
+| pg-boss | graphile-worker | graphile-worker is excellent but lower adoption (87k vs 231k weekly downloads); pg-boss has built-in cron syntax and a simpler API for linearwatch's two job types |
 | pg-boss | in-process setInterval | setInterval is not durable — crash loses the tick; Postgres-backed queue survives restarts with exactly-once delivery |
 | pg-boss | BullMQ | BullMQ requires Redis, which violates the Postgres-only constraint |
 | commander | oclif | oclif has 120ms startup vs commander's 22ms; oclif generates a project scaffold; overkill for 6 commands |
@@ -123,8 +123,8 @@ uv add httpx
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
 | Redis | Violates the Postgres-only constraint; adds infra complexity to `docker compose up` | pg-boss for job queue; Postgres advisory locks for distributed locking |
-| Kafka / RabbitMQ | Same infra complexity problem; agentwatch's event volume (10k-100k events/day) is trivially handled by Postgres | pg-boss |
-| Any TSDB (TimescaleDB, InfluxDB, Prometheus as storage) | Adds a second database engine; agentwatch's analytics are 90-day rolling windows on a fact table — not time-series at TSDB scale | Postgres with `date_trunc` + window functions via Drizzle's `sql` escape hatch |
+| Kafka / RabbitMQ | Same infra complexity problem; linearwatch's event volume (10k-100k events/day) is trivially handled by Postgres | pg-boss |
+| Any TSDB (TimescaleDB, InfluxDB, Prometheus as storage) | Adds a second database engine; linearwatch's analytics are 90-day rolling windows on a fact table — not time-series at TSDB scale | Postgres with `date_trunc` + window functions via Drizzle's `sql` escape hatch |
 | Prisma (for analytics queries) | Heavy migration UX; no clean window-function escape hatch pre-v7; still has Prisma Accelerate dependency pull | Drizzle ORM |
 | oclif | 120ms cold start (5x commander); plugin architecture overkill for a 6-command CLI | commander |
 | vercel/pkg | Largely unmaintained; bundles outdated Node.js; 90MB+ binary | Bun `--compile` |
@@ -162,17 +162,17 @@ uv add httpx
 
 **CLI binary distribution:**
 - Source lives in `packages/cli/` as TypeScript
-- `bun build --compile --target=bun-linux-x64 src/index.ts --outfile dist/agentwatch-linux-x64`
+- `bun build --compile --target=bun-linux-x64 src/index.ts --outfile dist/linearwatch-linux-x64`
 - GitHub Actions matrix for linux/amd64, linux/arm64, darwin/arm64
-- Docker compose `agentwatch` image: same binary, `ENTRYPOINT ["/usr/local/bin/agentwatch"]`
+- Docker compose `linearwatch` image: same binary, `ENTRYPOINT ["/usr/local/bin/linearwatch"]`
 
-**Node SDK (`@agentwatch/sdk`):**
+**Node SDK (`@linearwatch/sdk`):**
 - `packages/sdk-node/` in the monorepo; `tsup` builds ESM + CJS + `.d.ts`
 - No server dependency — thin HTTP client that `POST /api/v1/sdk/event` with API key
 - Published to npm via Changesets in CI
 - Contributors do not need to run the server to work on the SDK
 
-**Python SDK (`agentwatch` on PyPI):**
+**Python SDK (`linearwatch` on PyPI):**
 - `packages/sdk-python/` with `pyproject.toml` + hatchling backend
 - `httpx` for async HTTP; mirrors Node SDK event names exactly
 - `uv` for dev; `hatch build` for release; published via GitHub Actions
@@ -188,7 +188,7 @@ uv add httpx
 | pg-boss 12.x | Postgres ≥12 | Uses `SKIP LOCKED`; works with Postgres 16 Alpine in Docker |
 | Next.js 15.x | React 19 or 18 | App Router required for RSC; Pages Router is legacy |
 | @linear/sdk 82.x | Node.js 18+ | Auto-generated; version tracks Linear API schema |
-| prom-client 15.x | Node.js 18+ | No updates in 2 years but stable; no known CVEs; sufficient for agentwatch's metric surface |
+| prom-client 15.x | Node.js 18+ | No updates in 2 years but stable; no known CVEs; sufficient for linearwatch's metric surface |
 | Bun 1.x | Cross-compiles to linux/arm64, linux/x64, darwin/arm64 | 95-98% Node.js API compat; test SDK and CLI code under Node.js in CI to catch the 2-5% gap |
 
 ---
@@ -210,9 +210,9 @@ uv add httpx
 - Next.js 15.5 blog — https://nextjs.org/blog/next-15-5 — App Router + RSC patterns confirmed
 - DEV: "Building Great CLIs in 2025: Node.js vs Go vs Rust" — Go + Cobra + GoReleaser recommendation; Bun `--compile` as Node.js equivalent
 - DEV: "Why we migrated our CLI from NodeJS to GoLang" — Go binary size/portability advantages documented; mitigated by Bun for this project
-- Medium: "Node.js vs Go performance" — 2-5x throughput advantage for Go confirmed but irrelevant at agentwatch's SLA targets
+- Medium: "Node.js vs Go performance" — 2-5x throughput advantage for Go confirmed but irrelevant at linearwatch's SLA targets
 
 ---
 
-*Stack research for: agentwatch — self-hosted AI agent observability platform*
+*Stack research for: linearwatch — self-hosted AI agent observability platform*
 *Researched: 2026-05-03*
