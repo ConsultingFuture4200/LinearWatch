@@ -10,7 +10,8 @@
     "worker": "tsx src/worker.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bench:webhook-ack": "tsx test/perf/webhook-ack.bench.ts"
   },
   "dependencies": {
     "@agentwatch/db": "workspace:^",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@types/pg": "8.11.10",
+    "autocannon": "7.15.0",
     "drizzle-kit": "0.31.10",
     "tsx": "4.19.2",
     "vitest": "2.1.5"

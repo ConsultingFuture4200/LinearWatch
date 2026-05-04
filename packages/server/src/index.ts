@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import Fastify from 'fastify';
+import { runMigrations as runGraphileMigrations } from 'graphile-worker';
 import pino from 'pino';
 import { createServerDb } from './db.js';
 import { type Env, loadEnv, logBootBanner } from './env.js';
@@ -78,6 +79,15 @@ async function main(): Promise<void> {
     logger.info({ migrationsFolder }, 'running migrations');
     await migrate(db, { migrationsFolder });
     logger.info('migrations applied');
+    // Graphile Worker schema (graphile_worker.add_job, _private_jobs, etc.)
+    // must exist before the webhook handler can enqueue resolve_identity
+    // jobs. The worker process (plan 01.06) also calls runMigrations on its
+    // own startup; this call is idempotent so dual-installation is safe.
+    // Without it, the webhook handler returns 500 on every request that
+    // tries to enqueue (because graphile_worker.add_job does not exist).
+    logger.info('running graphile-worker migrations');
+    await runGraphileMigrations({ connectionString: env.DATABASE_URL });
+    logger.info('graphile-worker schema ready');
   } catch (err) {
     logger.fatal({ err }, 'FATAL: migration failed at startup');
     process.exit(1);

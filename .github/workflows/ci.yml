@@ -14,3 +14,33 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm check:no-req-body
+
+  # D-31 / INGEST-04: 200 concurrent webhooks; p99 ack < 200ms.
+  # Required for the foundation phase. Failure = red build.
+  bench-webhook-ack:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentwatch
+          POSTGRES_PASSWORD: agentwatch_dev_password
+          POSTGRES_DB: agentwatch
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U agentwatch"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @agentwatch/shared build
+      - run: pnpm --filter @agentwatch/db build
+      - run: pnpm --filter @agentwatch/server build
+      - name: Run webhook-ack bench (D-31)
+        env:
+          DATABASE_URL_TEST: postgres://agentwatch:agentwatch_dev_password@localhost:5432/postgres
+        run: pnpm --filter @agentwatch/server bench:webhook-ack
