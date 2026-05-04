@@ -79,10 +79,13 @@ interface MetricsPluginOptions {
 export default fp<MetricsPluginOptions>(async (fastify, opts) => {
   const tick = async (): Promise<void> => {
     try {
+      // Graphile Worker 0.16+ schema: _private_jobs.task_id is an FK to
+      // _private_tasks.id, with the human-readable name on _private_tasks.identifier.
       const r = await opts.db.execute(sql`
-        SELECT task_identifier AS job_name, COUNT(*)::int AS depth
-        FROM graphile_worker._private_jobs
-        GROUP BY task_identifier
+        SELECT t.identifier AS job_name, COUNT(*)::int AS depth
+        FROM graphile_worker._private_jobs j
+        JOIN graphile_worker._private_tasks t ON t.id = j.task_id
+        GROUP BY t.identifier
       `);
       jobsQueueDepth.reset();
       for (const row of r.rows as Array<{ job_name: string; depth: number }>) {

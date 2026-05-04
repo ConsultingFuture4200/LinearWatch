@@ -73,6 +73,26 @@ export async function fetchActiveWarnings(): Promise<WorkspaceWarning[]> {
 }
 
 /**
+ * Returns true when at least one workspace row exists. The dashboard layout
+ * uses this to redirect to `/setup` on first boot before any wizard step has
+ * created the workspace + API key. Probes the seed-status endpoint, which
+ * returns 401 `{"error":"no_workspace"}` when the workspace context cannot
+ * be resolved.
+ */
+export async function hasWorkspace(): Promise<boolean> {
+  const url = `${process.env.AGENTWATCH_INTERNAL_URL}/api/v1/workspace/seed-status`;
+  try {
+    const r = await fetch(url, {
+      headers: internalHeaders(),
+      cache: 'no-store',
+    });
+    return r.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Returns true when any agent row in the workspace has a name ending in
  * `-demo` — the simplest signal the dashboard can use to decide whether
  * to render the synthetic-data banner (D-07). Server-side endpoint added

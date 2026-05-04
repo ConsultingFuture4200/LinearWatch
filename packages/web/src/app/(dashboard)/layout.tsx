@@ -2,8 +2,9 @@ import { NavTabs } from '@/components/nav-tabs';
 import { SyntheticDataBanner } from '@/components/synthetic-data-banner';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { WorkspaceWarningsBanner } from '@/components/workspace-warnings-banner';
-import { fetchActiveWarnings, fetchSeedStatus } from '@/lib/api';
+import { fetchActiveWarnings, fetchSeedStatus, hasWorkspace } from '@/lib/api';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 /**
@@ -20,6 +21,13 @@ export default async function DashboardLayout({
 }: {
   children: ReactNode;
 }): Promise<React.JSX.Element> {
+  // First-boot gate: if the setup wizard has not run, no workspace row exists
+  // and every API call returns 401 `no_workspace`. Redirect to the wizard so
+  // the dashboard never tries to render against an empty/unauthorized backend.
+  if (!(await hasWorkspace())) {
+    redirect('/setup');
+  }
+
   const [warnings, hasSeed] = await Promise.all([
     fetchActiveWarnings().catch(() => []),
     fetchSeedStatus().catch(() => false),
