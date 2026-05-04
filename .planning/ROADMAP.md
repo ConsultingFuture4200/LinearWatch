@@ -31,7 +31,7 @@
 **Plans**: 10 plans
 - [x] 01.01-repo-bootstrap-PLAN.md — pnpm workspace, tsconfig, Biome, Vitest, compose stack, env contract, CI scaffolding
 - [x] 01.02-db-schema-PLAN.md — Drizzle schema files; first migration with monthly partitioning, FKs, analytics indexes
-- [ ] 01.03-shared-package-PLAN.md — hashTitle()+TitleHash brand; Query API Zod enums; SDK event schemas
+- [x] 01.03-shared-package-PLAN.md — hashTitle()+TitleHash brand; Query API Zod enums; SDK event schemas
 - [ ] 01.04-server-bootstrap-PLAN.md — Fastify + env validation + drizzle-kit migrate [BLOCKING] + pino redact + /metrics + Bearer auth
 - [ ] 01.05-linear-webhook-PLAN.md — POST /webhooks/linear: HMAC verify, idempotent INSERT, async enqueue; 200-concurrent p99<200ms benchmark
 - [ ] 01.06-graphile-worker-tasks-PLAN.md — Worker entry; resolve_identity, rotate_raw_event_partitions, detect_shared_app, refresh_cost_rollup stub
