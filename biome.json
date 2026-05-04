@@ -30,6 +30,7 @@
       "**/dist/**",
       "**/.next/**",
       "**/migrations/*.sql",
+      "**/migrations/meta/**",
       "**/node_modules/**",
       ".planning/**",
       "PRD_v0.1.0.md",
