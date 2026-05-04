@@ -1,9 +1,12 @@
 /**
  * @agentwatch/shared — package entry.
  *
- * P1 (this plan, 01.02) needs only the `TitleHash` branded type so that
- * `packages/db/src/schema/issues.ts` typechecks without a full `hashTitle`
- * implementation. Plan 01.03 lands `hashTitle()` and the rest of the
- * shared utilities (Zod metric/dimension enums, event types, etc.).
+ * Privacy (D-26 / D-27 / Pitfall 4 / Pitfall 13):
+ *   `hashTitle()` is the ONLY function permitted to read raw issue titles.
+ *   `TitleHash` is a branded string — assigning a non-branded string to a
+ *   `TitleHash`-typed field is a compile-time error.
+ *
+ * Query API (lands in Task 2): `MetricName`, `DimensionName`, `QueryRequest`.
+ * SDK events (lands in Task 2): `SdkEventBody` discriminated union.
  */
-export type { TitleHash } from './privacy';
+export * from './privacy';
