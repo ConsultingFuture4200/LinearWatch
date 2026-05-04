@@ -14,5 +14,14 @@ export default defineConfig({
   test: {
     include: ['test/**/*.{test,spec}.ts', 'src/**/*.{test,spec}.ts'],
     exclude: ['node_modules/**', 'dist/**', 'test/perf/**'],
+    // Integration tests under test/integration/** each spin up their own
+    // Postgres database, run drizzle + Graphile migrations, and exercise the
+    // server. When two such files run in parallel forks against the same
+    // Postgres instance, concurrent CREATE SCHEMA / CREATE TYPE statements
+    // hit the system catalog and produce duplicate-key races
+    // (`pg_namespace_nspname_index`, `pg_type_typname_nsp_index`). Serialise
+    // file execution to avoid the race; per-test parallelism inside a file
+    // remains the default.
+    fileParallelism: false,
   },
 });

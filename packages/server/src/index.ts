@@ -9,6 +9,7 @@ import authPlugin from './plugins/auth.js';
 import metricsPlugin, { registerMetricsRoute } from './plugins/metrics.js';
 import rawBody from './plugins/raw-body.js';
 import healthRoutes from './routes/health.js';
+import linearWebhookRoute from './routes/webhooks/linear.js';
 
 /**
  * Server entry — Phase 1, Plan 04.
@@ -100,8 +101,10 @@ async function main(): Promise<void> {
   await fastify.register(healthRoutes, { db });
   await registerMetricsRoute(fastify);
 
-  // Wave 2 will register /webhooks/linear, /api/v1/query, /api/v1/sdk/event,
-  // /api/v1/agents/[id]/confirm against this same instance.
+  // Wave 2 routes — registered against the decorated Fastify instance.
+  await fastify.register(linearWebhookRoute);
+  // /api/v1/query, /api/v1/sdk/event, /api/v1/agents/[id]/confirm land in
+  // plans 01.07-01.09.
 
   fastify.addHook('onClose', async () => {
     await pool.end();
