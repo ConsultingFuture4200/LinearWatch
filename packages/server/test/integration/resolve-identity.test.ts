@@ -6,8 +6,8 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { runMigrations as runGraphileMigrations, runOnce } from 'graphile-worker';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { resolveIdentity } from '../../src/tasks/resolve-identity.js';
 import { refreshCostRollup } from '../../src/tasks/refresh-cost-rollup.js';
+import { resolveIdentity } from '../../src/tasks/resolve-identity.js';
 
 /**
  * Integration tests for the `resolve_identity` Graphile Worker task.
@@ -85,10 +85,9 @@ describe.skipIf(!dbReachable)('resolve_identity job (D-15, D-16, ID-01..03)', ()
   }
 
   async function runResolveJob(rawEventId: string): Promise<void> {
-    await pool.query(
-      `SELECT graphile_worker.add_job('resolve_identity'::text, $1::json)`,
-      [JSON.stringify({ raw_event_id: rawEventId, workspace_id: WS })],
-    );
+    await pool.query(`SELECT graphile_worker.add_job('resolve_identity'::text, $1::json)`, [
+      JSON.stringify({ raw_event_id: rawEventId, workspace_id: WS }),
+    ]);
     await runOnce({
       connectionString: TEST_DB_URL,
       concurrency: 1,
