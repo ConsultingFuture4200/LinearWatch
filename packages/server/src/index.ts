@@ -9,7 +9,9 @@ import { type Env, loadEnv, logBootBanner } from './env.js';
 import authPlugin from './plugins/auth.js';
 import metricsPlugin, { registerMetricsRoute } from './plugins/metrics.js';
 import rawBody from './plugins/raw-body.js';
+import agentsConfirmRoute from './routes/api/v1/agents-confirm.js';
 import queryRoute from './routes/api/v1/query.js';
+import sdkEventRoute from './routes/api/v1/sdk-event.js';
 import healthRoutes from './routes/health.js';
 import linearWebhookRoute from './routes/webhooks/linear.js';
 
@@ -115,7 +117,8 @@ async function main(): Promise<void> {
   // Wave 2 routes — registered against the decorated Fastify instance.
   await fastify.register(linearWebhookRoute);
   await fastify.register(queryRoute);
-  // /api/v1/sdk/event, /api/v1/agents/[id]/confirm land in plan 01.07 task 2.
+  await fastify.register(sdkEventRoute);
+  await fastify.register(agentsConfirmRoute);
 
   fastify.addHook('onClose', async () => {
     await pool.end();
