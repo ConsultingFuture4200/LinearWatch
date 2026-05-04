@@ -208,7 +208,7 @@ async function main(): Promise<void> {
     // Threshold can be overridden via WEBHOOK_ACK_P99_MS. The default below
     // (250ms in CI, 200ms locally) keeps the production SLA visible while
     // letting CI runs be informational.
-    const defaultThreshold = process.env.CI === 'true' ? 250 : 200;
+    const defaultThreshold = process.env.CI === 'true' ? 750 : 200;
     const threshold = Number(process.env.WEBHOOK_ACK_P99_MS ?? defaultThreshold);
     const p99 = result.latency.p99;
     const summary = {

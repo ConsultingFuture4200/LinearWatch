@@ -1,7 +1,16 @@
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+// Resolve migrations folder relative to THIS file rather than process.cwd()
+// — `pnpm test` at the repo root runs vitest with cwd=repo root, which would
+// resolve `./migrations` to a non-existent path. Per-test absolute paths are
+// the robust fix.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const MIGRATIONS_DIR = resolve(__dirname, '..', 'migrations');
 
 /**
  * Verifies that `migrations/0000_init.sql` applies cleanly to postgres:16-alpine
@@ -60,7 +69,7 @@ describeIfPg('migration applies cleanly to postgres:16', () => {
   });
 
   it('applies 0000_init.sql', async () => {
-    await migrate(db, { migrationsFolder: './migrations' });
+    await migrate(db, { migrationsFolder: MIGRATIONS_DIR });
     const tables = await pool.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
         WHERE table_schema='public' OR table_schema='events'`,
@@ -149,7 +158,7 @@ describeIfPg('migration applies cleanly to postgres:16', () => {
   });
 
   it('migration is idempotent on second apply', async () => {
-    await expect(migrate(db, { migrationsFolder: './migrations' })).resolves.not.toThrow();
+    await expect(migrate(db, { migrationsFolder: MIGRATIONS_DIR })).resolves.not.toThrow();
   });
 
   it('raw_event accepts an insert and rejects a duplicate (source, upstream_id, received_at)', async () => {
