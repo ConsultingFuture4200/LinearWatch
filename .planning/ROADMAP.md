@@ -28,7 +28,17 @@
   3. The cost dashboard shows spend per agent broken down by team and cycle, sourced exclusively through `POST /api/v1/query` — no React component makes a direct Postgres call.
   4. The setup wizard explicitly warns about the Linear AgentSession UI visibility change before any OAuth step completes; `agentwatch setup` and the dashboard wizard follow the same flow.
   5. `grep -r 'req.body' src/` returns empty; the `issues` ORM type has no `title: string` field; CI asserts raw title strings never appear in any query API response.
-**Plans**: TBD
+**Plans**: 10 plans
+- [ ] 01.01-repo-bootstrap-PLAN.md — pnpm workspace, tsconfig, Biome, Vitest, compose stack, env contract, CI scaffolding
+- [ ] 01.02-db-schema-PLAN.md — Drizzle schema files; first migration with monthly partitioning, FKs, analytics indexes
+- [ ] 01.03-shared-package-PLAN.md — hashTitle()+TitleHash brand; Query API Zod enums; SDK event schemas
+- [ ] 01.04-server-bootstrap-PLAN.md — Fastify + env validation + drizzle-kit migrate [BLOCKING] + pino redact + /metrics + Bearer auth
+- [ ] 01.05-linear-webhook-PLAN.md — POST /webhooks/linear: HMAC verify, idempotent INSERT, async enqueue; 200-concurrent p99<200ms benchmark
+- [ ] 01.06-graphile-worker-tasks-PLAN.md — Worker entry; resolve_identity, rotate_raw_event_partitions, detect_shared_app, refresh_cost_rollup stub
+- [ ] 01.07-query-api-sdk-endpoint-PLAN.md — Zod-enumerated POST /api/v1/query dispatcher; SDK event endpoint; agents-confirm endpoint
+- [ ] 01.08-dashboard-PLAN.md — Next.js 15 cost view + identity side panel + P2-stub tabs + settings; lib/query.ts as the only data path
+- [ ] 01.09-setup-wizard-seed-PLAN.md — 7-step wizard with verbatim D-13 AgentSession warning; Playwright e2e; --seed synthetic data
+- [ ] 01.10-ci-gates-and-smoke-PLAN.md — Privacy guard + static checks + compose smoke; all 6 CI gates wired
 **UI hint**: yes
 
 ### Phase 2: Enrichment
@@ -61,7 +71,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/? | Not started | - |
+| 1. Foundation | 0/10 | Not started | - |
 | 2. Enrichment | 0/? | Not started | - |
 | 3. Launch | 0/? | Not started | - |
 
