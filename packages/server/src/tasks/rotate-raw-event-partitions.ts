@@ -54,15 +54,21 @@ export const rotateRawEventPartitions: Task = async (_payload, helpers) => {
     // 2. Find existing partitions and their upper-bound (the TO clause).
     //
     // pg_inherits + pg_get_expr exposes the partition bound expression as
-    // SQL text we can regex; the upper bound is the second date literal in
-    // `FOR VALUES FROM ('YYYY-MM-DD') TO ('YYYY-MM-DD')`. The partition's
-    // identifier comes through pg_class.oid::regclass which Postgres
-    // server-side-escapes — there is no path for arbitrary user input to
-    // become an identifier here (T-06-06).
+    // SQL text we can regex. For a timestamptz partition column, the
+    // expression looks like:
+    //   FOR VALUES FROM ('YYYY-MM-DD HH:MM:SS+TZ') TO ('YYYY-MM-DD HH:MM:SS+TZ')
+    // We only need the date portion of the upper bound for the 30-day
+    // retention comparison, so the regex matches the leading YYYY-MM-DD
+    // (greedy enough to ignore the time + offset, narrow enough that any
+    // future date-only partition column also matches).
+    //
+    // The partition's identifier comes through pg_class.oid::regclass which
+    // Postgres server-side-escapes — there is no path for arbitrary user
+    // input to become an identifier here (T-06-06).
     const r = await pg.query<{ partition: string; upper_bound: string | null }>(`
       SELECT
         child.oid::regclass::text AS partition,
-        (regexp_match(pg_get_expr(child.relpartbound, child.oid), 'TO \\(''([0-9-]+)''\\)'))[1] AS upper_bound
+        (regexp_match(pg_get_expr(child.relpartbound, child.oid), 'TO \\(''(\\d{4}-\\d{2}-\\d{2})'))[1] AS upper_bound
       FROM pg_inherits i
       JOIN pg_class child  ON child.oid  = i.inhrelid
       JOIN pg_class parent ON parent.oid = i.inhparent
