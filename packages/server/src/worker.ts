@@ -40,7 +40,7 @@ async function main(): Promise<void> {
     level: env.LOG_LEVEL,
     redact: {
       paths: [
-        'req.body',
+        'req.body', // allow-req-body: pino redact path string (Pitfall 5)
         'req.headers.authorization',
         'req.headers["linear-signature"]',
         'req.headers["x-hub-signature-256"]',
