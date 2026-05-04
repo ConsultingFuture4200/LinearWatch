@@ -29,7 +29,7 @@
   4. The setup wizard explicitly warns about the Linear AgentSession UI visibility change before any OAuth step completes; `agentwatch setup` and the dashboard wizard follow the same flow.
   5. `grep -r 'req.body' src/` returns empty; the `issues` ORM type has no `title: string` field; CI asserts raw title strings never appear in any query API response.
 **Plans**: 10 plans
-- [ ] 01.01-repo-bootstrap-PLAN.md — pnpm workspace, tsconfig, Biome, Vitest, compose stack, env contract, CI scaffolding
+- [x] 01.01-repo-bootstrap-PLAN.md — pnpm workspace, tsconfig, Biome, Vitest, compose stack, env contract, CI scaffolding
 - [ ] 01.02-db-schema-PLAN.md — Drizzle schema files; first migration with monthly partitioning, FKs, analytics indexes
 - [ ] 01.03-shared-package-PLAN.md — hashTitle()+TitleHash brand; Query API Zod enums; SDK event schemas
 - [ ] 01.04-server-bootstrap-PLAN.md — Fastify + env validation + drizzle-kit migrate [BLOCKING] + pino redact + /metrics + Bearer auth
