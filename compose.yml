@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agentwatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentwatch_dev_password}
+      POSTGRES_DB: agentwatch
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentwatch"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD:-agentwatch_dev_password}@postgres:5432/agentwatch
+      LINEAR_CLIENT_ID: ${LINEAR_CLIENT_ID}
+      LINEAR_CLIENT_SECRET: ${LINEAR_CLIENT_SECRET}
+      LINEAR_WEBHOOK_SECRET: ${LINEAR_WEBHOOK_SECRET}
+      WORKSPACE_ID: ${WORKSPACE_ID:-}
+      IDENTITY_CONFIDENCE_THRESHOLD: "0.8"
+      LOG_LEVEL: info
+      TELEMETRY_OPT_IN: "false"
+      PORT: "8080"
+      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+    command: ["node", "/app/packages/server/dist/index.js"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD:-agentwatch_dev_password}@postgres:5432/agentwatch
+      LOG_LEVEL: info
+      IDENTITY_CONFIDENCE_THRESHOLD: "0.8"
+      TELEMETRY_OPT_IN: "false"
+    command: ["node", "/app/packages/server/dist/worker.js"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      AGENTWATCH_INTERNAL_URL: http://server:8080
+      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+
+volumes:
+  postgres-data:

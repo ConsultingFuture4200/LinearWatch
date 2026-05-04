@@ -1,0 +1,26 @@
+FROM node:22-alpine AS deps
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages/db/package.json packages/db/
+COPY packages/shared/package.json packages/shared/
+COPY packages/server/package.json packages/server/
+RUN pnpm install --frozen-lockfile
+
+FROM deps AS build
+COPY packages/db ./packages/db
+COPY packages/shared ./packages/shared
+COPY packages/server ./packages/server
+RUN pnpm --filter @agentwatch/shared build \
+ && pnpm --filter @agentwatch/db build \
+ && pnpm --filter @agentwatch/server build
+
+FROM node:22-alpine AS runtime
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/packages ./packages
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+EXPOSE 8080
+CMD ["node", "/app/packages/server/dist/index.js"]
