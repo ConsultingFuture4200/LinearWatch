@@ -38,7 +38,7 @@
 - [ ] 01.07-query-api-sdk-endpoint-PLAN.md — Zod-enumerated POST /api/v1/query dispatcher; SDK event endpoint; agents-confirm endpoint
 - [ ] 01.08-dashboard-PLAN.md — Next.js 15 cost view + identity side panel + P2-stub tabs + settings; lib/query.ts as the only data path
 - [ ] 01.09-setup-wizard-seed-PLAN.md — 7-step wizard with verbatim D-13 AgentSession warning; Playwright e2e; --seed synthetic data
-- [ ] 01.10-ci-gates-and-smoke-PLAN.md — Privacy guard + static checks + compose smoke; all 6 CI gates wired
+- [x] 01.10-ci-gates-and-smoke-PLAN.md — Privacy guard + static checks + compose smoke; all 6 CI gates wired
 **UI hint**: yes
 
 ### Phase 2: Enrichment
