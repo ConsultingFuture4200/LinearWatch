@@ -210,10 +210,9 @@ describe.skipIf(!dbReachable)('Setup wizard endpoints', () => {
         payload: { pat: 'ghp_TESTTOKEN1234' },
       });
       expect(r.statusCode).toBe(200);
-      const row = await pool.query(
-        'SELECT github_pat_encoded FROM workspaces WHERE id=$1',
-        [wsBody.workspace_id],
-      );
+      const row = await pool.query('SELECT github_pat_encoded FROM workspaces WHERE id=$1', [
+        wsBody.workspace_id,
+      ]);
       const encoded = row.rows[0].github_pat_encoded as string;
       expect(Buffer.from(encoded, 'base64').toString('utf8')).toBe('ghp_TESTTOKEN1234');
     });

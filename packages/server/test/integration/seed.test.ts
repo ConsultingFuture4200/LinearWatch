@@ -136,7 +136,7 @@ describe.skipIf(!dbReachable)('Seed endpoints (POST /api/v1/seed, /admin/clear-s
     // INSERT used `title_hash` is implicit (the schema would reject otherwise).
 
     const sessions = await pool.query(
-      `SELECT count(*)::int AS n FROM agent_sessions WHERE workspace_id=$1`,
+      'SELECT count(*)::int AS n FROM agent_sessions WHERE workspace_id=$1',
       [WS],
     );
     expect(sessions.rows[0].n).toBe(50);
