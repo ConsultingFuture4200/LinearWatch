@@ -43,6 +43,11 @@ services:
       dockerfile: Dockerfile.worker
     environment:
       DATABASE_URL: postgres://agentwatch:${POSTGRES_PASSWORD:-agentwatch_dev_password}@postgres:5432/agentwatch
+      LINEAR_CLIENT_ID: ${LINEAR_CLIENT_ID}
+      LINEAR_CLIENT_SECRET: ${LINEAR_CLIENT_SECRET}
+      LINEAR_WEBHOOK_SECRET: ${LINEAR_WEBHOOK_SECRET}
+      AGENTWATCH_INTERNAL_API_KEY: ${AGENTWATCH_INTERNAL_API_KEY}
+      WORKSPACE_ID: ${WORKSPACE_ID:-}
       LOG_LEVEL: info
       IDENTITY_CONFIDENCE_THRESHOLD: "0.8"
       TELEMETRY_OPT_IN: "false"
