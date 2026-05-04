@@ -15,6 +15,57 @@ jobs:
       - run: pnpm test
       - run: pnpm check:no-req-body
 
+  # SETUP-02 / D-13: AgentSession warning verbatim copy gates Linear OAuth.
+  # Required for the foundation phase. The verbatim button label
+  # "I've notified my team" must be the only modal exit; Escape must not close.
+  e2e-setup-wizard:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agentwatch
+          POSTGRES_PASSWORD: agentwatch_dev_password
+          POSTGRES_DB: agentwatch
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U agentwatch"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: corepack enable && corepack prepare pnpm@9.12.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @agentwatch/shared build
+      - run: pnpm --filter @agentwatch/db build
+      - run: pnpm --filter @agentwatch/server build
+      - run: pnpm --filter @agentwatch/web build
+        env:
+          AGENTWATCH_INTERNAL_URL: http://localhost:8080
+          AGENTWATCH_INTERNAL_API_KEY: ci-internal-1234567890
+      - run: pnpm --filter @agentwatch/web exec playwright install --with-deps chromium
+      - name: Start agentwatch server
+        run: |
+          DATABASE_URL=postgres://agentwatch:agentwatch_dev_password@localhost:5432/agentwatch \
+          LINEAR_CLIENT_ID=ci-client-id \
+          LINEAR_CLIENT_SECRET=ci-client-secret \
+          LINEAR_WEBHOOK_SECRET=ci-webhook-secret \
+          AGENTWATCH_INTERNAL_API_KEY=ci-internal-1234567890 \
+          PORT=8080 \
+          node packages/server/dist/index.js &
+          # Wait for /health
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8080/health >/dev/null 2>&1; then break; fi
+            sleep 1
+          done
+      - name: Run setup-wizard e2e
+        env:
+          AGENTWATCH_INTERNAL_URL: http://localhost:8080
+          AGENTWATCH_INTERNAL_API_KEY: ci-internal-1234567890
+        run: pnpm --filter @agentwatch/web exec playwright test
+
   # D-31 / INGEST-04: 200 concurrent webhooks; p99 ack < 200ms.
   # Required for the foundation phase. Failure = red build.
   bench-webhook-ack:

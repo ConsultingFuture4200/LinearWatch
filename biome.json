@@ -32,6 +32,8 @@
       "**/migrations/*.sql",
       "**/migrations/meta/**",
       "**/node_modules/**",
+      "**/test-results/**",
+      "**/playwright-report/**",
       ".planning/**",
       "PRD_v0.1.0.md",
       "README_v1.md"
