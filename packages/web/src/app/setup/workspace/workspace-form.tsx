@@ -30,7 +30,13 @@ export function WorkspaceForm(): React.JSX.Element {
   const [plaintextKey, setPlaintextKey] = useState<string | null>(null);
   const [ack, setAck] = useState(false);
 
-  function onSubmit(formData: FormData): void {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+    // React 19 warns when <form action={fn}> receives a non-ServerAction
+    // function. We need client-side state (plaintextKey reveal), so use the
+    // classic onSubmit pattern with explicit preventDefault and call the
+    // Server Action from inside startTransition.
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
       const result = await generateApiKeyAction(formData);
@@ -70,7 +76,7 @@ export function WorkspaceForm(): React.JSX.Element {
   }
 
   return (
-    <form action={onSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="name">Workspace name</Label>
         <Input

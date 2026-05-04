@@ -66,8 +66,6 @@ export function AgentsessionWarningModal(): React.JSX.Element {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-foreground/60" />
         <DialogPrimitive.Content
           role="alertdialog"
-          aria-labelledby="agentsession-warning-heading"
-          aria-describedby="agentsession-warning-body"
           // Disable Escape (D-13: click-through is the only exit).
           onEscapeKeyDown={(e) => e.preventDefault()}
           // Disable backdrop click.
@@ -76,13 +74,16 @@ export function AgentsessionWarningModal(): React.JSX.Element {
           onInteractOutside={(e) => e.preventDefault()}
           className="fixed top-[50%] left-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] rounded-lg border-t-4 border-warning bg-background p-8 shadow-lg outline-none"
         >
-          <h2 id="agentsession-warning-heading" className="text-[28px] font-semibold leading-tight">
+          {/* Radix requires DialogTitle + DialogDescription as descendants of
+              DialogContent for screen-reader compliance — registering custom
+              aria-labelledby/aria-describedby IDs is not sufficient. */}
+          <DialogPrimitive.Title className="text-[28px] font-semibold leading-tight">
             {HEADING}
-          </h2>
-          <div id="agentsession-warning-body" className="mt-6 space-y-4 text-sm text-foreground">
-            <p>{WARNING_PARAGRAPH_1}</p>
-            <p>{WARNING_PARAGRAPH_2}</p>
-          </div>
+          </DialogPrimitive.Title>
+          <DialogPrimitive.Description className="mt-6 text-sm text-foreground">
+            {WARNING_PARAGRAPH_1}
+          </DialogPrimitive.Description>
+          <p className="mt-4 text-sm text-foreground">{WARNING_PARAGRAPH_2}</p>
           <div className="mt-8 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={handlePause}>
               {SECONDARY_LABEL}
